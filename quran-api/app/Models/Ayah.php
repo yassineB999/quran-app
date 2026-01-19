@@ -18,6 +18,7 @@ class Ayah extends Model
         'page',
         'hizb',
         'manzil',
+        'translation_en',
     ];
 
     public function surah()
