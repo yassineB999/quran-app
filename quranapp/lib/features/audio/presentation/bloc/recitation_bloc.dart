@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart'; // For debugPrint
-import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:record/record.dart';
-import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/features/quran/domain/entities/surah.dart'; // Contains Verse
 import 'package:quranapp/features/quran/domain/repositories/quran_repository.dart';
 
@@ -305,10 +304,16 @@ class RecitationBloc extends Bloc<RecitationEvent, RecitationState> {
     final newCorrect = Set<int>.from(existingFeedback.correctWords);
     final newMistakes = Set<int>.from(existingFeedback.mistakeWords);
 
-    for (var w in correctList) newCorrect.add(w['word']);
-    for (var w in mistakeList) newMistakes.add(w['word']);
+    for (var w in correctList) {
+      newCorrect.add(w['word']);
+    }
+    for (var w in mistakeList) {
+      newMistakes.add(w['word']);
+    }
     // Skipped words are also mistakes? Or just missing.
-    for (var w in skippedList) newMistakes.add(w['word']);
+    for (var w in skippedList) {
+      newMistakes.add(w['word']);
+    }
 
     VerseStatus status = VerseStatus.reciting;
     if (correctList.isNotEmpty && mistakeList.isEmpty && skippedList.isEmpty) {

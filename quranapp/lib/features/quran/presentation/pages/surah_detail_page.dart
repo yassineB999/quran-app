@@ -117,7 +117,7 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
-            color: isDark ? Colors.white10 : Colors.grey.withOpacity(0.1),
+            color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.1),
             height: 1,
           ),
         ),
@@ -168,8 +168,9 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
                     padding: const EdgeInsets.only(bottom: 180),
                     itemCount: state.surah.verses.length,
                     itemBuilder: (context, index) {
-                      if (index < 0 || index >= state.surah.verses.length)
+                      if (index < 0 || index >= state.surah.verses.length) {
                         return const SizedBox.shrink();
+                      }
                       return VerseItem(verse: state.surah.verses[index]);
                     },
                   );

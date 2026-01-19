@@ -61,7 +61,7 @@ class CompassWidget extends StatelessWidget {
                         width: 16,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.1),
+                          color: Colors.grey.withValues(alpha: 0.1),
                           borderRadius: const BorderRadius.only(
                             bottomLeft: Radius.circular(8),
                             bottomRight: Radius.circular(8),
@@ -116,7 +116,7 @@ class CompassWidget extends StatelessWidget {
             width: 4,
             height: 20,
             decoration: BoxDecoration(
-              color: AppTheme.primaryTeal.withOpacity(0.5),
+              color: AppTheme.primaryTeal.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -134,9 +134,9 @@ class _CompassDialBackground extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.grey.withOpacity(0.05), // Very light fill
+        color: Colors.grey.withValues(alpha: 0.05), // Very light fill
         border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
+          color: Colors.grey.withValues(alpha: 0.2),
           width: 12,
         ), // Outer ring
       ),
@@ -176,14 +176,15 @@ class _TicksPainter extends CustomPainter {
 
       if (isCardinal) {
         String label = '';
-        if (i == 0)
+        if (i == 0) {
           label = 'N';
-        else if (i == 90)
+        } else if (i == 90) {
           label = 'E';
-        else if (i == 180)
+        } else if (i == 180) {
           label = 'S';
-        else if (i == 270)
+        } else if (i == 270) {
           label = 'W';
+        }
 
         textPainter.text = TextSpan(
           text: label,

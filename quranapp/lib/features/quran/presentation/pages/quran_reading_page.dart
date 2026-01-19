@@ -176,8 +176,9 @@ class _QuranPageViewState extends State<_QuranPageView> {
                         );
                       }
                       final verses = state.pages[pageNumber]!;
-                      if (verses.isEmpty)
+                      if (verses.isEmpty) {
                         return const Center(child: Text("Empty Page"));
+                      }
 
                       return _QuranSinglePage(
                         verses: verses,
@@ -206,7 +207,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -220,7 +221,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryTeal.withOpacity(0.1),
+                            color: AppTheme.primaryTeal.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Text(
@@ -246,7 +247,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
                             Text(
                               'Tap to play',
                               style: TextStyle(
-                                color: textColor.withOpacity(0.6),
+                                color: textColor.withValues(alpha: 0.6),
                                 fontSize: 12,
                               ),
                             ),
@@ -359,7 +360,7 @@ class _QuranSinglePageState extends State<_QuranSinglePage> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             'Page ${widget.pageNumber}',
-            style: TextStyle(color: widget.textColor.withOpacity(0.5)),
+            style: TextStyle(color: widget.textColor.withValues(alpha: 0.5)),
           ),
         ),
         Expanded(
@@ -368,7 +369,7 @@ class _QuranSinglePageState extends State<_QuranSinglePage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
             decoration: BoxDecoration(
               border: Border.symmetric(
-                vertical: BorderSide(color: Colors.grey.withOpacity(0.1)),
+                vertical: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
               ),
             ),
             child: SingleChildScrollView(

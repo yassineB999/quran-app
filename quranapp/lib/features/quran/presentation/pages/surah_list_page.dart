@@ -66,8 +66,8 @@ class SurahListPage extends StatelessWidget {
                   vertical: 8,
                 ),
                 itemCount: state.surahs.length,
-                separatorBuilder: (_, __) =>
-                    Divider(color: theme.dividerColor.withOpacity(0.1)),
+                separatorBuilder: (context, index) =>
+                    Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
                 itemBuilder: (context, index) {
                   final surah = state.surahs[index];
                   return ListTile(
@@ -79,13 +79,13 @@ class SurahListPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         // Gold/Teal implementation based on design
                         color: isDark
-                            ? AppTheme.primaryTeal.withOpacity(0.2)
-                            : AppTheme.primaryTeal.withOpacity(0.1),
+                            ? AppTheme.primaryTeal.withValues(alpha: 0.2)
+                            : AppTheme.primaryTeal.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(
                           12,
                         ), // Rounded box instead of circle (modern)
                         border: Border.all(
-                          color: AppTheme.primaryTeal.withOpacity(0.3),
+                          color: AppTheme.primaryTeal.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -106,7 +106,7 @@ class SurahListPage extends StatelessWidget {
                     subtitle: Text(
                       '${surah.revelationPlace} • ${surah.versesCount} verses',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.6),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     trailing: Text(

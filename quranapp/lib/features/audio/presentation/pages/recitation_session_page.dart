@@ -85,14 +85,17 @@ class _RecitationViewState extends State<_RecitationView> {
           // Auto-scroll logic could go here
         },
         builder: (context, state) {
-          if (state.isLoading)
+          if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
-          if (state.surah == null) return const SizedBox();
+          }
+          if (state.surah == null) {
+            return const SizedBox();
+          }
 
           return Column(
             children: [
               // 1. Divider line
-              Container(height: 1, color: Colors.grey.shade300),
+              Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
 
               // 2. Main Content (Verse + Snake)
               Expanded(
@@ -135,7 +138,9 @@ class _RecitationViewState extends State<_RecitationView> {
   }
 
   Widget _buildActiveVerseCard(RecitationState state) {
-    if (state.ayahs.isEmpty) return const SizedBox();
+    if (state.ayahs.isEmpty) {
+      return const SizedBox();
+    }
     final verse = state.ayahs[state.currentVerseIndex];
     final feedback = state.verseFeedback[verse.number];
 
@@ -152,7 +157,7 @@ class _RecitationViewState extends State<_RecitationView> {
               margin: const EdgeInsets.only(top: 10),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -178,10 +183,12 @@ class _RecitationViewState extends State<_RecitationView> {
           Color color = Colors.black;
 
           if (feedback != null) {
-            if (feedback.correctWords.contains(wordIndex))
+            if (feedback.correctWords.contains(wordIndex)) {
               color = const Color(0xFF4CAF50); // Green
-            if (feedback.mistakeWords.contains(wordIndex))
+            }
+            if (feedback.mistakeWords.contains(wordIndex)) {
               color = const Color(0xFFE57373); // Red
+            }
           }
 
           return Text(
@@ -218,8 +225,8 @@ class _RecitationViewState extends State<_RecitationView> {
         final isEven = rowIndex % 2 == 0;
         final displayVerses = isEven ? rowVerses : rowVerses.reversed.toList();
 
-        return Container(
-          height: 80, // Fixed height for alignment
+        return SizedBox(
+          height: 80,
           child: Stack(
             children: [
               // Lines would Go Here (CustomPainter)
@@ -268,7 +275,7 @@ class _RecitationViewState extends State<_RecitationView> {
         boxShadow: isCurrent
             ? [
                 BoxShadow(
-                  color: const Color(0xFF4DB6AC).withOpacity(0.3),
+                  color: const Color(0xFF4DB6AC).withValues(alpha: 0.3),
                   blurRadius: 8,
                   spreadRadius: 1,
                 ),
@@ -293,7 +300,7 @@ class _RecitationViewState extends State<_RecitationView> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             offset: const Offset(0, -2),
             blurRadius: 10,
           ),
@@ -366,7 +373,7 @@ class _RecitationViewState extends State<_RecitationView> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withOpacity(0.3),
+                            color: Colors.green.withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),

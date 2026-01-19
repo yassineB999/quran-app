@@ -68,11 +68,10 @@ class AudioPlayerService {
   /// Load audio playlist
   Future<void> playPlaylist(List<String> urls) async {
     await init();
-    final playlist = ConcatenatingAudioSource(
-      useLazyPreparation: true,
-      children: urls.map((url) => AudioSource.uri(Uri.parse(url))).toList(),
-    );
-    await _player.setAudioSource(playlist);
+    final sources = urls
+        .map((url) => AudioSource.uri(Uri.parse(url)))
+        .toList(growable: false);
+    await _player.setAudioSources(sources, initialIndex: 0);
     await _player.play();
   }
 

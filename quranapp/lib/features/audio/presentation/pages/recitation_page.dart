@@ -65,7 +65,9 @@ class _RecitationPageView extends StatelessWidget {
                     ),
                     Text(
                       "${state.surah!.versesCount} Verses • ${state.surah!.revelationPlace}",
-                      style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
                     ),
                   ],
                 ),
@@ -209,7 +211,7 @@ class _RecitationPageView extends StatelessWidget {
           boxShadow: isCurrent
               ? [
                   BoxShadow(
-                    color: AppTheme.primaryTeal.withOpacity(0.4),
+                    color: AppTheme.primaryTeal.withValues(alpha: 0.4),
                     blurRadius: 10,
                     spreadRadius: 2,
                   ),
@@ -294,7 +296,7 @@ class _RecitationPageView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(

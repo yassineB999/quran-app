@@ -19,8 +19,8 @@ class VerseItem extends StatelessWidget {
         border: Border(
           bottom: BorderSide(
             color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey.withOpacity(0.1),
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -39,8 +39,8 @@ class VerseItem extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isDark
-                      ? colorScheme.primary.withOpacity(0.2)
-                      : colorScheme.primary.withOpacity(0.1),
+                    ? colorScheme.primary.withValues(alpha: 0.2)
+                    : colorScheme.primary.withValues(alpha: 0.1),
                 ),
                 child: Text(
                   '${verse.numberInSurah}',

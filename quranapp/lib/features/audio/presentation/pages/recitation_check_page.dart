@@ -201,7 +201,7 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
                                           (isRecording
                                                   ? Colors.red
                                                   : AppTheme.primaryTeal)
-                                              .withOpacity(0.35),
+                                              .withValues(alpha: 0.35),
                                       blurRadius: 18,
                                       spreadRadius: 2,
                                     ),
@@ -230,7 +230,9 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
                                 ? "Recording..."
                                 : "Tap to start",
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                           ),
                         ],
@@ -335,7 +337,7 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
         ),
         Expanded(
           child: DropdownButtonFormField<Surah>(
-            value: selectedSurah,
+            initialValue: selectedSurah,
             decoration: InputDecoration(
               labelText: 'Select Surah',
               border: const OutlineInputBorder(),
@@ -391,7 +393,9 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.4)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -420,7 +424,7 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
                       color: isCompleted
                           ? AppTheme.primaryTeal
                           : isSelected
-                          ? AppTheme.primaryTeal.withOpacity(0.1)
+                          ? AppTheme.primaryTeal.withValues(alpha: 0.1)
                           : Colors.transparent,
                       shape: BoxShape.circle,
                       border: Border.all(
@@ -438,7 +442,9 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: isSelected
                                   ? AppTheme.primaryTeal
-                                  : colorScheme.onSurface.withOpacity(0.6),
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -480,7 +486,7 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
             ? Colors.redAccent
             : isCurrent
             ? AppTheme.primaryTeal
-            : colorScheme.outlineVariant.withOpacity(0.4);
+            : colorScheme.outlineVariant.withValues(alpha: 0.4);
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
@@ -516,7 +522,7 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: isCompleted
                             ? Colors.white
-                            : colorScheme.onSurface.withOpacity(0.7),
+                            : colorScheme.onSurface.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -573,7 +579,7 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
             width: width.toDouble(),
             height: 12,
             decoration: BoxDecoration(
-              color: colorScheme.outlineVariant.withOpacity(0.35),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(8),
             ),
           );
@@ -633,7 +639,7 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
                         Text(
                           state.currentReciter?.name ?? "Loading reciter...",
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.6),
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -678,7 +684,7 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
                         );
                       },
                 activeColor: AppTheme.primaryTeal,
-                inactiveColor: AppTheme.primaryTeal.withOpacity(0.2),
+                inactiveColor: AppTheme.primaryTeal.withValues(alpha: 0.2),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -686,13 +692,13 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
                   Text(
                     _formatDuration(position),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   Text(
                     _formatDuration(duration),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -703,7 +709,7 @@ class _RecitationCheckPageState extends State<RecitationCheckPage> {
                   child: Text(
                     "Loading audio...",
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ),

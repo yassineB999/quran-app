@@ -49,7 +49,9 @@ class QiblahLocalDataSourceImpl implements QiblahLocalDataSource {
     }
 
     final Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
     );
 
     // 2. Calculate Qiblah Bearing (Static for this session usually)

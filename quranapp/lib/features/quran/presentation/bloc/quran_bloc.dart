@@ -46,10 +46,10 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
   }
 
   String _mapFailureToMessage(Failure failure) {
-    switch (failure.runtimeType) {
-      case ServerFailure:
+    switch (failure) {
+      case ServerFailure():
         return 'Server Error';
-      case NetworkFailure:
+      case NetworkFailure():
         return 'Connection Error';
       default:
         return 'Unexpected Error';

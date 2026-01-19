@@ -35,7 +35,6 @@ class AppTheme {
         secondary: goldAccent,
         surface: lightSurface,
         onSurface: lightTextPrimary,
-        background: warmBeige, // Updated to Warm Beige
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: lightBackground,
@@ -73,7 +72,6 @@ class AppTheme {
         secondary: goldAccent,
         surface: darkSurface,
         onSurface: darkTextPrimary,
-        background: darkBackground,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: darkBackground, // Blend with body

@@ -45,9 +45,7 @@ class GreetingHeader extends StatelessWidget {
 
 // --- Continue Reading Card ---
 class ContinueReadingCard extends StatefulWidget {
-  final VoidCallback onTap;
-
-  const ContinueReadingCard({super.key, required this.onTap});
+  const ContinueReadingCard({super.key});
 
   @override
   State<ContinueReadingCard> createState() => _ContinueReadingCardState();
@@ -100,6 +98,12 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.black.withValues(alpha: 0.06);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: GestureDetector(
@@ -114,13 +118,14 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
           height: 140,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: borderColor),
             image: const DecorationImage(
               image: AssetImage('assets/images/home-continue-reading-bg.png'),
               fit: BoxFit.cover,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -135,7 +140,7 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withOpacity(0.1),
+                        Colors.black.withValues(alpha: 0.1),
                         Colors.transparent,
                       ],
                       begin: Alignment.bottomLeft,
@@ -228,13 +233,20 @@ class DailyAyahCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.05);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: borderColor),
           image: const DecorationImage(
             image: AssetImage('assets/images/home-todays-ayah-bg.png'),
             fit: BoxFit.cover,
@@ -242,7 +254,7 @@ class DailyAyahCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -367,14 +379,21 @@ class _FeaturedSurahCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.black.withValues(alpha: 0.06);
+
     return Container(
       width: 120,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
         image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -386,7 +405,7 @@ class _FeaturedSurahCard extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+            colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
           ),
         ),
         padding: const EdgeInsets.all(12),
@@ -478,14 +497,21 @@ class _PracticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.05);
+
     return Container(
       height: 120,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -496,16 +522,13 @@ class _PracticeCard extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              right: 0,
-              bottom: 0,
-              child: Opacity(
-                opacity: 1.0,
-                child: Image.asset(
-                  imagePath,
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                ),
+              right: 8,
+              bottom: 8,
+              child: Image.asset(
+                imagePath,
+                width: 84,
+                height: 84,
+                fit: BoxFit.contain,
               ),
             ),
             Padding(

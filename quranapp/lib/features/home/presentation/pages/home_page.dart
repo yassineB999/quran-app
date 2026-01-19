@@ -19,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       extendBodyBehindAppBar: true,
       body: IndexedStack(
         index: _currentIndex,
@@ -36,11 +37,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   const GreetingHeader(),
                   const SizedBox(height: 12),
-                  ContinueReadingCard(
-                    onTap: () {
-                      // Navigate to last read
-                    },
-                  ),
+                  const ContinueReadingCard(),
                   const SizedBox(height: 24),
                   const DailyAyahCard(),
                   const SizedBox(height: 24),
