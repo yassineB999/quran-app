@@ -13,6 +13,7 @@ Route::get('/user', function (Request $request) {
 Route::controller(SurahController::class)->group(function () {
     Route::get('/surahs', 'index');
     Route::get('/surahs/{id}', 'show');
+    Route::get('/surahs/{id}/pages', 'pages');
 });
 
 Route::controller(ReciterController::class)->group(function () {

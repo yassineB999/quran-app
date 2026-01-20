@@ -456,22 +456,24 @@ class RecitationPracticeSection extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Row(
-            children: const [
+            children: [
               Expanded(
-                child: _PracticeCard(
-                  title: 'Listen & Repeat',
-                  subtitle: 'Improve your Tajweed',
+                child: _PracticeFeaturedCard(
+                  title: 'Listen',
+                  subtitle: 'Start with any surah',
                   imagePath: 'assets/images/home-practice-card-1.png',
-                  color: Color(0xFFE8F5E9),
+                  buttonLabel: 'Listen',
+                  onTap: () => context.push('/quran'),
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
-                child: _PracticeCard(
+                child: _PracticeFeaturedCard(
                   title: 'Memorization',
-                  subtitle: 'Track your Hifz',
+                  subtitle: 'Mushaf recitation',
                   imagePath: 'assets/images/home-practice-card-2.png',
-                  color: Color(0xFFFFF3E0),
+                  buttonLabel: 'Memorize',
+                  onTap: () => context.push('/audio'),
                 ),
               ),
             ],
@@ -482,17 +484,19 @@ class RecitationPracticeSection extends StatelessWidget {
   }
 }
 
-class _PracticeCard extends StatelessWidget {
+class _PracticeFeaturedCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String imagePath;
-  final Color color;
+  final String buttonLabel;
+  final VoidCallback onTap;
 
-  const _PracticeCard({
+  const _PracticeFeaturedCard({
     required this.title,
     required this.subtitle,
     required this.imagePath,
-    required this.color,
+    required this.buttonLabel,
+    required this.onTap,
   });
 
   @override
@@ -500,63 +504,73 @@ class _PracticeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.05);
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.black.withValues(alpha: 0.06);
 
-    return Container(
-      height: 120,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: [
-            Positioned(
-              right: 8,
-              bottom: 8,
-              child: Image.asset(
-                imagePath,
-                width: 84,
-                height: 84,
-                fit: BoxFit.contain,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(fontSize: 10, color: Colors.black54),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 160,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+          image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+            ),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Colors.white70, fontSize: 10),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryTeal.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  buttonLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

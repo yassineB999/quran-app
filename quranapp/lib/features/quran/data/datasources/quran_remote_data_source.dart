@@ -2,11 +2,13 @@ import 'package:quranapp/core/error/exceptions.dart';
 import 'package:quranapp/core/network/api_endpoints.dart';
 import 'package:quranapp/core/network/dio_client.dart';
 import 'package:quranapp/features/quran/data/models/surah_model.dart';
+import 'package:quranapp/features/quran/data/models/surah_page_range_model.dart';
 
 abstract class QuranRemoteDataSource {
   Future<List<SurahModel>> getSurahs();
   Future<SurahModel> getSurah(int id);
   Future<List<VerseModel>> getQuranPage(int page);
+  Future<SurahPageRangeModel> getSurahPageRange(int surahId);
 }
 
 class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
@@ -53,6 +55,20 @@ class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
     } else {
       throw ServerException(
         message: 'Failed to load page $page',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  @override
+  Future<SurahPageRangeModel> getSurahPageRange(int surahId) async {
+    final response = await dioClient.get(ApiEndpoints.surahPages(surahId));
+
+    if (response.statusCode == 200) {
+      return SurahPageRangeModel.fromJson(response.data['data']);
+    } else {
+      throw ServerException(
+        message: 'Failed to load page range for surah $surahId',
         statusCode: response.statusCode,
       );
     }

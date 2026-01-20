@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quranapp/core/di/injection_container.dart';
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_bloc.dart';
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_event.dart';
+import 'package:quranapp/features/audio/presentation/widgets/media_player.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_bloc.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_event.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_state.dart';
-import 'package:quranapp/features/quran/presentation/widgets/media_player.dart';
 import 'package:quranapp/features/quran/domain/usecases/save_reading_state.dart';
 import 'package:quranapp/features/quran/presentation/widgets/verse_item.dart';
 

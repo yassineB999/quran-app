@@ -1,6 +1,5 @@
 import 'package:get_it/get_it.dart';
 import 'package:quranapp/features/audio/domain/usecases/check_recitation.dart';
-import 'package:quranapp/features/audio/presentation/bloc/recitation_check_cubit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:quranapp/config/routes/app_router.dart';
@@ -12,8 +11,10 @@ import 'package:quranapp/features/quran/data/repositories/quran_repository_impl.
 import 'package:quranapp/features/quran/domain/repositories/quran_repository.dart';
 import 'package:quranapp/features/quran/domain/usecases/get_all_surahs.dart';
 import 'package:quranapp/features/quran/domain/usecases/get_surah_detail.dart';
+import 'package:quranapp/features/quran/domain/usecases/get_surah_page_range.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_bloc.dart';
 import 'package:quranapp/features/quran/presentation/bloc/reader/quran_reader_bloc.dart';
+import 'package:quranapp/features/quran/presentation/bloc/mushaf/mushaf_bloc.dart';
 import 'package:quranapp/features/quran/domain/usecases/get_quran_page.dart';
 import 'package:quranapp/features/quran/domain/usecases/save_reading_progress.dart';
 import 'package:quranapp/features/quran/domain/usecases/get_reading_progress.dart';
@@ -51,6 +52,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetSurahDetail(sl()));
   sl.registerLazySingleton(() => GetAllSurahs(sl()));
   sl.registerLazySingleton(() => GetQuranPage(sl()));
+  sl.registerLazySingleton(() => GetSurahPageRange(sl()));
   sl.registerLazySingleton(() => SaveReadingProgress(sl()));
   sl.registerLazySingleton(() => GetReadingProgress(sl()));
   sl.registerLazySingleton(() => GetLastReadingState(sl()));
@@ -61,6 +63,17 @@ Future<void> init() async {
       getQuranPage: sl(),
       saveReadingProgress: sl(),
       getReadingProgress: sl(),
+    ),
+  );
+
+  // Mushaf Bloc
+  sl.registerFactory(
+    () => MushafBloc(
+      getSurahPageRange: sl(),
+      getQuranPage: sl(),
+      getSurahDetail: sl(),
+      checkRecitation: sl(),
+      quranRepository: sl(),
     ),
   );
 
@@ -91,13 +104,6 @@ Future<void> init() async {
       audioService: sl(),
       getReciters: sl(),
       getAudioUrl: sl(),
-    ),
-  );
-  sl.registerFactory(
-    () => RecitationCheckCubit(
-      getAllSurahs: sl(),
-      getSurahDetail: sl(),
-      checkRecitation: sl(),
     ),
   );
 

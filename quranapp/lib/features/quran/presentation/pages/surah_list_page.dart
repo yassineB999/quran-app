@@ -8,7 +8,14 @@ import 'package:quranapp/features/quran/presentation/bloc/quran_event.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_state.dart';
 
 class SurahListPage extends StatelessWidget {
-  const SurahListPage({super.key});
+  final bool openMushafOnTap;
+  final String title;
+
+  const SurahListPage({
+    super.key,
+    this.openMushafOnTap = false,
+    this.title = 'Quran',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +31,7 @@ class SurahListPage extends StatelessWidget {
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: Text(
-            'Quran',
+            title,
             style:
                 theme.appBarTheme.titleTextStyle ??
                 TextStyle(
@@ -109,18 +116,74 @@ class SurahListPage extends StatelessWidget {
                         color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
-                    trailing: Text(
-                      surah.arabicName,
-                      style: TextStyle(
-                        color: AppTheme.primaryTeal,
-                        fontSize: 20,
-                        fontFamily: 'Amiri',
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    trailing: openMushafOnTap
+                        ? Text(
+                            surah.arabicName,
+                            style: TextStyle(
+                              color: AppTheme.primaryTeal,
+                              fontSize: 20,
+                              fontFamily: 'Amiri',
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : PopupMenuButton<String>(
+                            icon: Text(
+                              surah.arabicName,
+                              style: TextStyle(
+                                color: AppTheme.primaryTeal,
+                                fontSize: 20,
+                                fontFamily: 'Amiri',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onSelected: (value) {
+                              if (value == 'read') {
+                                context.push('/quran/${surah.number}');
+                              } else if (value == 'mushaf') {
+                                context.push('/mushaf/${surah.number}');
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'read',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.menu_book,
+                                      color: AppTheme.primaryTeal,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text('Read Surah'),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'mushaf',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.auto_stories,
+                                      color: AppTheme.goldAccent,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text('Mushaf Recitation'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                     onTap: () {
-                      context.push('/quran/${surah.number}');
+                      if (openMushafOnTap) {
+                        context.push('/mushaf/${surah.number}');
+                      } else {
+                        context.push('/quran/${surah.number}');
+                      }
                     },
+                    onLongPress: openMushafOnTap
+                        ? null
+                        : () {
+                            context.push('/mushaf/${surah.number}');
+                          },
                   );
                 },
               );

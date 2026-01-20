@@ -4,6 +4,7 @@ import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/features/quran/data/datasources/quran_local_data_source.dart';
 import 'package:quranapp/features/quran/data/datasources/quran_remote_data_source.dart';
 import 'package:quranapp/features/quran/domain/entities/surah.dart';
+import 'package:quranapp/features/quran/domain/entities/surah_page_range.dart';
 import 'package:quranapp/features/quran/domain/repositories/quran_repository.dart';
 import 'package:quranapp/core/network/network_info.dart';
 
@@ -60,6 +61,24 @@ class QuranRepositoryImpl implements QuranRepository {
       try {
         final remoteVerses = await remoteDataSource.getQuranPage(page);
         return Right(remoteVerses);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } on NetworkException catch (e) {
+        return Left(NetworkFailure(e.message));
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, SurahPageRange>> getSurahPageRange(int surahId) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final pageRange = await remoteDataSource.getSurahPageRange(surahId);
+        return Right(pageRange);
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
       } on NetworkException catch (e) {

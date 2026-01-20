@@ -40,7 +40,6 @@ class MediaPlayer extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle bar
               Container(
                 width: 40,
                 height: 4,
@@ -50,19 +49,11 @@ class MediaPlayer extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-
-              // Info Row
               _buildInfoRow(context, state, isDark),
               const SizedBox(height: 16),
-
-              // Progress
               _buildProgressRow(context, state, isLoading),
               const SizedBox(height: 12),
-
-              // Controls
               _buildControlsRow(context, state, isPlaying, isLoading, isDark),
-
-              // Error message
               if (hasError)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -130,8 +121,6 @@ class MediaPlayer extends StatelessWidget {
             ],
           ),
         ),
-
-        // Speed button
         GestureDetector(
           onTap: () => _showSpeedSelector(context, state, isDark),
           child: Container(
@@ -223,7 +212,6 @@ class MediaPlayer extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        // Repeat
         IconButton(
           onPressed: isLoading
               ? null
@@ -238,8 +226,6 @@ class MediaPlayer extends StatelessWidget {
             size: 24,
           ),
         ),
-
-        // Previous
         IconButton(
           onPressed: isLoading
               ? null
@@ -250,8 +236,6 @@ class MediaPlayer extends StatelessWidget {
                 },
           icon: const Icon(Icons.skip_previous, color: Colors.white, size: 32),
         ),
-
-        // Play/Pause
         Container(
           width: 64,
           height: 64,
@@ -297,8 +281,6 @@ class MediaPlayer extends StatelessWidget {
                   ),
                 ),
         ),
-
-        // Next
         IconButton(
           onPressed: isLoading
               ? null
@@ -307,8 +289,6 @@ class MediaPlayer extends StatelessWidget {
                 },
           icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
         ),
-
-        // Speed indicator (small)
         Container(
           width: 40,
           alignment: Alignment.center,

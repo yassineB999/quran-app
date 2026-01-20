@@ -9,6 +9,7 @@ class ApiEndpoints {
   // Quran endpoints
   static const String surahs = '/surahs';
   static String surahDetails(int id) => '$surahs/$id';
+  static String surahPages(int surahId) => '$surahs/$surahId/pages';
 
   static String quranPage(int page) => '/pages/$page';
 
