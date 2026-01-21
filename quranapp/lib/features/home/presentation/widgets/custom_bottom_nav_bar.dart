@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -12,6 +13,7 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
     final borderColor = isDarkMode
@@ -44,35 +46,35 @@ class CustomBottomNavBar extends StatelessWidget {
                 _buildNavItem(
                   context,
                   index: 0,
-                  label: 'Home',
+                  label: l10n.tr('homeLabel'),
                   icon: Icons.home_outlined,
                   activeIcon: Icons.home,
                 ),
                 _buildNavItem(
                   context,
                   index: 1,
-                  label: 'Quran',
+                  label: l10n.tr('quranLabel'),
                   icon: Icons.menu_book_outlined,
                   activeIcon: Icons.menu_book,
                 ),
                 _buildNavItem(
                   context,
                   index: 2,
-                  label: 'Qiblah',
+                  label: l10n.tr('qiblahLabel'),
                   icon: Icons.view_in_ar_outlined,
                   activeIcon: Icons.view_in_ar,
                 ),
                 _buildNavItem(
                   context,
                   index: 3,
-                  label: 'Audio',
+                  label: l10n.tr('audioLabel'),
                   icon: Icons.lightbulb_outline,
                   activeIcon: Icons.lightbulb,
                 ),
                 _buildNavItem(
                   context,
                   index: 4,
-                  label: 'More',
+                  label: l10n.tr('moreLabel'),
                   icon: Icons.settings_outlined,
                   activeIcon: Icons.settings,
                 ),

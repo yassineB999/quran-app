@@ -5,6 +5,7 @@ import 'package:quranapp/features/quran/presentation/pages/surah_detail_page.dar
 import 'package:quranapp/features/qiblah/presentation/pages/qiblah_page.dart';
 import 'package:quranapp/features/quran/presentation/pages/quran_reading_page.dart';
 import 'package:quranapp/features/quran/presentation/pages/mushaf_recitation_page.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
 
 class AppRouter {
   final GoRouter router = GoRouter(
@@ -34,9 +35,9 @@ class AppRouter {
           ),
           GoRoute(
             path: '/audio',
-            builder: (context, state) => const SurahListPage(
+            builder: (context, state) => SurahListPage(
               openMushafOnTap: true,
-              title: 'Mushaf Recitation',
+              title: AppLocalizations.of(context).tr('mushafRecitationTitle'),
             ),
           ),
           GoRoute(path: '/more', builder: (context, state) => const MorePage()),
@@ -48,9 +49,9 @@ class AppRouter {
       ),
       GoRoute(
         path: '/mushaf',
-        builder: (context, state) => const SurahListPage(
+        builder: (context, state) => SurahListPage(
           openMushafOnTap: true,
-          title: 'Mushaf Recitation',
+          title: AppLocalizations.of(context).tr('mushafRecitationTitle'),
         ),
       ),
       GoRoute(

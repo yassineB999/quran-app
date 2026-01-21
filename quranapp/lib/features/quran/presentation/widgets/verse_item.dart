@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quranapp/features/quran/domain/entities/surah.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
 
 class VerseItem extends StatelessWidget {
   final Verse verse;
@@ -11,6 +12,7 @@ class VerseItem extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -113,13 +115,16 @@ class VerseItem extends StatelessWidget {
                   builder: (context) => AlertDialog(
                     backgroundColor: theme.cardTheme.color,
                     title: Text(
-                      'Tafseer',
+                      l10n.tr('tafseerTitle'),
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
                     content: Text(
-                      'Tafseer content for verse ${verse.numberInSurah}...',
+                      l10n.tr(
+                        'tafseerContent',
+                        params: {'verse': '${verse.numberInSurah}'},
+                      ),
                       style: TextStyle(
                         color: isDark ? Colors.white70 : Colors.black87,
                       ),
@@ -127,7 +132,7 @@ class VerseItem extends StatelessWidget {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Close'),
+                        child: Text(l10n.tr('close')),
                       ),
                     ],
                   ),
@@ -149,7 +154,7 @@ class VerseItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Read Tafseer',
+                      l10n.tr('readTafseer'),
                       style: TextStyle(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w600,

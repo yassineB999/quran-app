@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:quranapp/features/audio/domain/usecases/check_recitation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:quranapp/config/routes/app_router.dart';
 import 'package:quranapp/core/network/dio_client.dart';
 import 'package:quranapp/core/network/network_info.dart';
@@ -30,6 +31,13 @@ import 'package:quranapp/features/audio/domain/usecases/get_audio_url.dart';
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_bloc.dart';
 import 'package:quranapp/features/audio/presentation/services/audio_player_service.dart';
 
+import 'package:quranapp/features/home/data/datasources/home_remote_data_source.dart';
+import 'package:quranapp/features/home/data/repositories/home_repository_impl.dart';
+import 'package:quranapp/features/home/domain/repositories/home_repository.dart';
+import 'package:quranapp/features/home/domain/usecases/get_daily_hadith.dart';
+import 'package:quranapp/features/home/domain/usecases/get_hijri_date.dart';
+import 'package:quranapp/features/home/presentation/bloc/home_cubit.dart';
+
 // Qiblah feature imports
 import 'package:quranapp/features/qiblah/data/datasources/qiblah_local_data_source.dart';
 import 'package:quranapp/features/qiblah/data/repositories/qiblah_repository_impl.dart';
@@ -43,7 +51,10 @@ Future<void> init() async {
   //! Features - Splash
 
   //! Core
-  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl());
+  sl.registerLazySingleton(() => Connectivity());
+  sl.registerLazySingleton<NetworkInfo>(
+    () => NetworkInfoImpl(connectivity: sl()),
+  );
 
   //! Features - Quran
   sl.registerFactory(() => QuranBloc(getSurahDetail: sl(), getAllSurahs: sl()));
@@ -63,6 +74,7 @@ Future<void> init() async {
       getQuranPage: sl(),
       saveReadingProgress: sl(),
       getReadingProgress: sl(),
+      saveReadingState: sl(),
     ),
   );
 
@@ -120,6 +132,20 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<ReciterRemoteDataSource>(
     () => ReciterRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  //! Features - Home
+  sl.registerFactory(() => HomeCubit(getDailyHadith: sl(), getHijriDate: sl()));
+
+  sl.registerLazySingleton(() => GetDailyHadith(sl()));
+  sl.registerLazySingleton(() => GetHijriDate(sl()));
+
+  sl.registerLazySingleton<HomeRepository>(
+    () => HomeRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+
+  sl.registerLazySingleton<HomeRemoteDataSource>(
+    () => HomeRemoteDataSourceImpl(dioClient: sl()),
   );
 
   //! Features - Qiblah

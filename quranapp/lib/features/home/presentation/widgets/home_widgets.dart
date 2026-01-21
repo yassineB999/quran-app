@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quranapp/config/theme/app_theme.dart';
 import 'package:quranapp/core/di/injection_container.dart';
 import 'package:quranapp/core/usecases/usecase.dart';
+import 'package:quranapp/features/home/presentation/bloc/home_cubit.dart';
+import 'package:quranapp/features/home/presentation/bloc/home_state.dart';
 import 'package:quranapp/features/quran/domain/usecases/get_last_reading_state.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
+import 'package:share_plus/share_plus.dart';
 
 // --- Greeting Header ---
 class GreetingHeader extends StatelessWidget {
@@ -11,39 +17,80 @@ class GreetingHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final l10n = AppLocalizations.of(context);
+    return BlocBuilder<HomeCubit, HomeState>(
+      builder: (context, state) {
+        final hijriDate = state.hijriDate;
+        final hijriText = hijriDate == null
+            ? l10n.tr('hijriDatePlaceholder')
+            : l10n.tr(
+                'hijriDateFormat',
+                params: {
+                  'day': hijriDate.day.toString(),
+                  'month': hijriDate.month,
+                  'year': hijriDate.year.toString(),
+                },
+              );
+
+        return SizedBox(
+          height: 160,
+          width: double.infinity,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Text(
-                'Assalamu Alaikum,',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.lightTextSecondary,
-                  fontSize: 16,
+              const Image(
+                image: AssetImage('assets/images/screen-night.png'),
+                fit: BoxFit.cover,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.65),
+                      Colors.black.withValues(alpha: 0.25),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Musab',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppTheme.lightTextPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
+              SafeArea(
+                bottom: false,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.tr('greeting'),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        hijriText,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 12,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
-// --- Continue Reading Card ---
 class ContinueReadingCard extends StatefulWidget {
   const ContinueReadingCard({super.key});
 
@@ -52,8 +99,8 @@ class ContinueReadingCard extends StatefulWidget {
 }
 
 class _ContinueReadingCardState extends State<ContinueReadingCard> {
-  String title = 'Al-Fatihah';
-  String subtitle = 'Ayah 1';
+  String title = '';
+  String subtitle = '';
   bool isLoading = true;
   int? lastPage;
   int? lastSurahId;
@@ -62,6 +109,14 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      setState(() {
+        title = l10n.tr('defaultSurahTitle');
+        subtitle = l10n.tr('defaultAyahLabel');
+      });
+    });
     _loadLastReadingState();
   }
 
@@ -71,33 +126,38 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
       final result = await getLastReadingState(NoParams());
 
       if (mounted) {
-        result.fold((l) => setState(() => isLoading = false), (state) {
+        final l10n = AppLocalizations.of(context);
+        result.fold((_) => setState(() => isLoading = false), (state) {
           setState(() {
             readingMode = state.mode;
             lastPage = state.page ?? 1;
             lastSurahId = state.surahId ?? 1;
 
             if (readingMode == 'page') {
-              title = 'Page $lastPage';
-              subtitle = 'Continue Reading';
+              title = l10n.tr(
+                'continueReadingPageTitle',
+                params: {'page': '$lastPage'},
+              );
+              subtitle = l10n.tr('continueReadingSubtitleReading');
             } else {
-              // For now, we only store ID, ideally we'd fetch Surah Name too.
-              // But for this step, let's keep it simple or async fetch name.
-              // We can map ID to name if we had the list, or just say Surah #.
-              title = 'Surah #${state.surahId}';
-              subtitle = 'Continue Reciting';
+              title = l10n.tr(
+                'continueReadingSurahTitle',
+                params: {'surahId': '${state.surahId}'},
+              );
+              subtitle = l10n.tr('continueReadingSubtitleReciting');
             }
             isLoading = false;
           });
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) setState(() => isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final borderColor = isDark
@@ -109,13 +169,13 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
       child: GestureDetector(
         onTap: () {
           if (readingMode == 'page') {
-            context.push('/read'); // Pages handle their own state via Bloc
+            context.push('/read');
           } else {
             context.push('/quran/$lastSurahId');
           }
         },
         child: Container(
-          height: 140,
+          height: 130,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: borderColor),
@@ -135,12 +195,11 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
             borderRadius: BorderRadius.circular(20),
             child: Stack(
               children: [
-                // Gradient Overlay
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withValues(alpha: 0.1),
+                        Colors.black.withValues(alpha: 0.12),
                         Colors.transparent,
                       ],
                       begin: Alignment.bottomLeft,
@@ -150,8 +209,8 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0,
-                    vertical: 16.0,
+                    horizontal: 16.0,
+                    vertical: 10.0,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,20 +218,21 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            'Last Read',
-                            style: TextStyle(
+                          Text(
+                            l10n.tr('lastReadLabel'),
+                            style: const TextStyle(
                               color: Colors.white70,
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(height: 4),
                           isLoading
                               ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
+                                  width: 18,
+                                  height: 18,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     color: Colors.white,
@@ -182,7 +242,7 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
                                   title,
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 20,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
                                   maxLines: 1,
@@ -190,28 +250,33 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
                                 ),
                           Text(
                             subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
+                              fontSize: 11,
                             ),
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.warmGreen,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: const Text(
-                          'Continue',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warmGreen,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Text(
+                            l10n.tr('continueButton'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -227,211 +292,197 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
   }
 }
 
-// --- Daily Ayah Card ---
-class DailyAyahCard extends StatelessWidget {
-  const DailyAyahCard({super.key});
+class HadithOfTheDayCard extends StatefulWidget {
+  const HadithOfTheDayCard({super.key});
+
+  @override
+  State<HadithOfTheDayCard> createState() => _HadithOfTheDayCardState();
+}
+
+class _HadithOfTheDayCardState extends State<HadithOfTheDayCard> {
+  bool isExpanded = false;
+
+  String _buildShareText(HomeState state) {
+    final hadith = state.dailyHadith;
+    if (hadith == null) return '';
+    return [
+      hadith.arabic,
+      hadith.translation,
+      hadith.reference,
+    ].where((text) => text.trim().isNotEmpty).join('\n\n');
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
     final borderColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
         : Colors.black.withValues(alpha: 0.05);
+    final backgroundColor = isDark
+        ? theme.colorScheme.surface
+        : const Color(0xFFF9F7F2);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor),
-          image: const DecorationImage(
-            image: AssetImage('assets/images/home-todays-ayah-bg.png'),
-            fit: BoxFit.cover,
-            opacity: 0.1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Today's Ayah",
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryTeal,
-                  ),
-                ),
-                Icon(
-                  Icons.share_outlined,
-                  size: 20,
-                  color: AppTheme.primaryTeal,
+    return BlocBuilder<HomeCubit, HomeState>(
+      builder: (context, state) {
+        final hadith = state.dailyHadith;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Amiri',
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                height: 1.8,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'In the name of Allah, the Entirely Merciful, the Especially Merciful.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.lightTextSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Al-Fatiha, Ayah 1',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppTheme.primaryTeal,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// --- Featured Surahs Section ---
-class FeaturedSurahsSection extends StatelessWidget {
-  const FeaturedSurahsSection({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Text(
-            'Featured Surahs',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Divider(color: borderColor, thickness: 1),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const SizedBox(width: 40),
+                    Expanded(
+                      child: Text(
+                        l10n.tr('hadithOfTheDayTitle'),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryTeal,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.share_outlined),
+                          color: AppTheme.primaryTeal,
+                          iconSize: 18,
+                          onPressed: state.dailyHadith == null
+                              ? null
+                              : () {
+                                  final shareText = _buildShareText(state);
+                                  if (shareText.isNotEmpty) {
+                                    SharePlus.instance.share(
+                                      ShareParams(text: shareText),
+                                    );
+                                  }
+                                },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy_outlined),
+                          color: AppTheme.primaryTeal,
+                          iconSize: 18,
+                          onPressed: state.dailyHadith == null
+                              ? null
+                              : () async {
+                                  final shareText = _buildShareText(state);
+                                  if (shareText.isEmpty) return;
+                                  await Clipboard.setData(
+                                    ClipboardData(text: shareText),
+                                  );
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        l10n.tr('hadithCopiedClipboard'),
+                                      ),
+                                    ),
+                                  );
+                                },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Divider(color: borderColor, thickness: 1),
+                const SizedBox(height: 16),
+                if (state.isHadithLoading)
+                  const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else if (hadith == null)
+                  Text(
+                    state.hadithError ?? l10n.tr('hadithUnavailable'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.lightTextSecondary,
+                    ),
+                  )
+                else
+                  Column(
+                    children: [
+                      Text(
+                        hadith.arabic,
+                        textAlign: TextAlign.center,
+                        maxLines: isExpanded ? null : 2,
+                        overflow: isExpanded
+                            ? TextOverflow.visible
+                            : TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Amiri',
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            isExpanded = !isExpanded;
+                          });
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.primaryTeal,
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(
+                          isExpanded
+                              ? l10n.tr('readLess')
+                              : l10n.tr('readMore'),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        hadith.translation,
+                        textAlign: TextAlign.center,
+                        maxLines: isExpanded ? null : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.lightTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        hadith.reference,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.lightTextSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 160,
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            scrollDirection: Axis.horizontal,
-            children: const [
-              _FeaturedSurahCard(
-                imagePath: 'assets/images/home-featured-al-mulk.png',
-                title: 'Al-Mulk',
-                subtitle: 'The Sovereignty',
-              ),
-              SizedBox(width: 12),
-              _FeaturedSurahCard(
-                imagePath: 'assets/images/home-featured-al-baqarah.png',
-                title: 'Al-Baqarah',
-                subtitle: 'The Cow',
-              ),
-              SizedBox(width: 12),
-              _FeaturedSurahCard(
-                imagePath: 'assets/images/home-featured-al-fatiha.png',
-                title: 'Al-Fatiha',
-                subtitle: 'The Opener',
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FeaturedSurahCard extends StatelessWidget {
-  final String imagePath;
-  final String title;
-  final String subtitle;
-
-  const _FeaturedSurahCard({
-    required this.imagePath,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.black.withValues(alpha: 0.06);
-
-    return Container(
-      width: 120,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-        image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
-          ),
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              subtitle,
-              style: const TextStyle(color: Colors.white70, fontSize: 10),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -442,37 +493,38 @@ class RecitationPracticeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Recitation Practice',
+            l10n.tr('recitationPracticeTitle'),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
                 child: _PracticeFeaturedCard(
-                  title: 'Listen',
-                  subtitle: 'Start with any surah',
+                  title: l10n.tr('practiceListenTitle'),
+                  subtitle: l10n.tr('practiceListenSubtitle'),
                   imagePath: 'assets/images/home-practice-card-1.png',
-                  buttonLabel: 'Listen',
+                  buttonLabel: l10n.tr('practiceListenButton'),
                   onTap: () => context.push('/quran'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _PracticeFeaturedCard(
-                  title: 'Memorization',
-                  subtitle: 'Mushaf recitation',
+                  title: l10n.tr('practiceMemorizationTitle'),
+                  subtitle: l10n.tr('practiceMemorizationSubtitle'),
                   imagePath: 'assets/images/home-practice-card-2.png',
-                  buttonLabel: 'Memorize',
+                  buttonLabel: l10n.tr('practiceMemorizationButton'),
                   onTap: () => context.push('/audio'),
                 ),
               ),
@@ -510,11 +562,14 @@ class _PracticeFeaturedCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 160,
+        height: 140,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: borderColor),
-          image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
+          image: DecorationImage(
+            image: AssetImage(imagePath),
+            fit: BoxFit.cover,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -532,7 +587,7 @@ class _PracticeFeaturedCard extends StatelessWidget {
               colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
             ),
           ),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,9 +608,12 @@ class _PracticeFeaturedCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryTeal.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(20),

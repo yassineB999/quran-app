@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_bloc.dart';
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_event.dart';
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_state.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
 
 class MediaPlayer extends StatelessWidget {
   const MediaPlayer({super.key});
@@ -10,6 +11,7 @@ class MediaPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final l10n = AppLocalizations.of(context);
 
     return BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
       builder: (context, state) {
@@ -58,7 +60,7 @@ class MediaPlayer extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    state.errorMessage ?? 'An error occurred',
+                    state.errorMessage ?? l10n.tr('audioErrorOccurred'),
                     style: const TextStyle(
                       color: Colors.orangeAccent,
                       fontSize: 12,
@@ -78,6 +80,7 @@ class MediaPlayer extends StatelessWidget {
     AudioPlayerState state,
     bool isDark,
   ) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -86,7 +89,10 @@ class MediaPlayer extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Surah ${state.surahId}',
+                l10n.tr(
+                  'surahNumberLabel',
+                  params: {'number': '${state.surahId}'},
+                ),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -101,7 +107,7 @@ class MediaPlayer extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        state.currentReciter?.name ?? 'Select Reciter',
+                        state.currentReciter?.name ?? l10n.tr('selectReciter'),
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 13,
@@ -303,6 +309,7 @@ class MediaPlayer extends StatelessWidget {
     AudioPlayerState state,
     bool isDark,
   ) {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: isDark
@@ -319,9 +326,9 @@ class MediaPlayer extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Select Reciter',
-                  style: TextStyle(
+                Text(
+                  l10n.tr('selectReciter'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -394,6 +401,7 @@ class MediaPlayer extends StatelessWidget {
     bool isDark,
   ) {
     final speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+    final l10n = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -411,9 +419,9 @@ class MediaPlayer extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Playback Speed',
-                  style: TextStyle(
+                Text(
+                  l10n.tr('playbackSpeed'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

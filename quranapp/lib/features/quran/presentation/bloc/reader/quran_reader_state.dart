@@ -6,12 +6,14 @@ enum ReaderStatus { initial, loading, loaded, failure }
 class QuranReaderState extends Equatable {
   final ReaderStatus status;
   final Map<int, List<Verse>> pages; // Cache: PageNumber -> Verses
+  final Set<int> loadingPages;
   final String? errorMessage;
   final int? lastReadPage; // Persisted last page
 
   const QuranReaderState({
     this.status = ReaderStatus.initial,
     this.pages = const {},
+    this.loadingPages = const {},
     this.errorMessage,
     this.lastReadPage,
   });
@@ -19,17 +21,25 @@ class QuranReaderState extends Equatable {
   QuranReaderState copyWith({
     ReaderStatus? status,
     Map<int, List<Verse>>? pages,
+    Set<int>? loadingPages,
     String? errorMessage,
     int? lastReadPage,
   }) {
     return QuranReaderState(
       status: status ?? this.status,
       pages: pages ?? this.pages,
+      loadingPages: loadingPages ?? this.loadingPages,
       errorMessage: errorMessage ?? this.errorMessage,
       lastReadPage: lastReadPage ?? this.lastReadPage,
     );
   }
 
   @override
-  List<Object?> get props => [status, pages, errorMessage, lastReadPage];
+  List<Object?> get props => [
+    status,
+    pages,
+    loadingPages,
+    errorMessage,
+    lastReadPage,
+  ];
 }

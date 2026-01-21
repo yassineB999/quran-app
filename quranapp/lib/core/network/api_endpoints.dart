@@ -1,7 +1,7 @@
 /// Centralized API endpoints for the Laravel API.
 /// Update the baseUrl to match your API server.
 class ApiEndpoints {
-  static const String baseUrl = 'http://192.168.3.253:8001/api';
+  static const String baseUrl = 'http://192.168.1.6:8001/api';
   // Connection timeout in milliseconds
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;
@@ -18,4 +18,11 @@ class ApiEndpoints {
   static String audio(int reciterId, int surahId) =>
       '/audio/$reciterId/$surahId';
   static const String recitationCheck = '/recitation/check';
+
+  // Hadith endpoints
+  static const String hadithDaily = '/hadith/daily';
+
+  // Hijri calendar endpoints
+  static String hijriCalendarMonth(int year, int month) =>
+      '/hijri/calendar/$year/$month';
 }

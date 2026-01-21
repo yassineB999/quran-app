@@ -9,6 +9,7 @@ import 'package:quranapp/features/quran/presentation/bloc/mushaf/mushaf_state.da
 import 'package:quranapp/features/quran/presentation/widgets/eye_toggle_button.dart';
 import 'package:quranapp/features/quran/presentation/widgets/mushaf_audio_control_bar.dart';
 import 'package:quranapp/features/quran/presentation/widgets/mushaf_page_widget.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
 import 'package:record/record.dart';
 
 /// Main page for Mushaf-style Quran reading with integrated recitation.
@@ -69,7 +70,11 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Microphone permission denied')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).tr('microphonePermissionDenied'),
+            ),
+          ),
         );
       }
     }
@@ -123,6 +128,7 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
   PreferredSizeWidget _buildAppBar(BuildContext context, MushafState state) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -130,7 +136,7 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
       title: Column(
         children: [
           Text(
-            state.selectedSurah?.arabicName ?? 'Loading...',
+            state.selectedSurah?.arabicName ?? l10n.tr('loading'),
             style: TextStyle(
               fontFamily: 'Amiri',
               fontSize: 22,
@@ -139,7 +145,13 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
           ),
           if (state.pageRange != null)
             Text(
-              'Page ${state.currentPage} of ${state.pageRange!.lastPage}',
+              l10n.tr(
+                'pageOf',
+                params: {
+                  'current': '${state.currentPage}',
+                  'total': '${state.pageRange!.lastPage}',
+                },
+              ),
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? Colors.white60 : Colors.black54,
@@ -178,7 +190,12 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${state.session.completedAyahs.length} done',
+                  l10n.tr(
+                    'doneCount',
+                    params: {
+                      'count': '${state.session.completedAyahs.length}',
+                    },
+                  ),
                   style: const TextStyle(
                     color: Colors.green,
                     fontSize: 12,
@@ -193,6 +210,7 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
   }
 
   Widget _buildErrorView(BuildContext context, MushafState state) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -200,7 +218,7 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
           Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
           const SizedBox(height: 16),
           Text(
-            state.errorMessage ?? 'An error occurred',
+            state.errorMessage ?? l10n.tr('errorOccurred'),
             style: const TextStyle(fontSize: 16),
             textAlign: TextAlign.center,
           ),
@@ -211,7 +229,7 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
               context.read<MushafBloc>().add(LoadSurahForMushaf(surahId));
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(l10n.tr('retry')),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryTeal,
             ),
@@ -223,7 +241,9 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
 
   Widget _buildMushafContent(BuildContext context, MushafState state) {
     if (state.pageRange == null) {
-      return const Center(child: Text('No pages available'));
+      return Center(
+        child: Text(AppLocalizations.of(context).tr('noPagesAvailable')),
+      );
     }
 
     final pageCount = state.pageRange!.pageCount;

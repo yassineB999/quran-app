@@ -1,16 +1,17 @@
-/// Abstraction for checking network connectivity.
-/// This allows for easier testing and clean architecture compliance.
+import 'package:connectivity_plus/connectivity_plus.dart';
+
 abstract class NetworkInfo {
   Future<bool> get isConnected;
 }
 
-/// Stub implementation of NetworkInfo.
-/// To enable real connectivity checking, add connectivity_plus package:
-///   flutter pub add connectivity_plus
-/// Then implement using Connectivity().checkConnectivity()
-///
-/// For now, we rely on Dio's error handling for network issues.
 class NetworkInfoImpl implements NetworkInfo {
+  final Connectivity connectivity;
+
+  NetworkInfoImpl({required this.connectivity});
+
   @override
-  Future<bool> get isConnected => Future.value(true);
+  Future<bool> get isConnected async {
+    final result = await connectivity.checkConnectivity();
+    return !result.contains(ConnectivityResult.none);
+  }
 }

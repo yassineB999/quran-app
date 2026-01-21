@@ -8,7 +8,7 @@ import 'package:quranapp/features/quran/domain/entities/surah.dart';
 import 'package:quranapp/features/quran/presentation/bloc/reader/quran_reader_bloc.dart';
 import 'package:quranapp/features/quran/presentation/bloc/reader/quran_reader_event.dart';
 import 'package:quranapp/features/quran/presentation/bloc/reader/quran_reader_state.dart';
-import 'package:quranapp/features/quran/domain/usecases/save_reading_state.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
 
 class QuranReadingPage extends StatelessWidget {
   final int initialPage;
@@ -55,11 +55,10 @@ class _QuranPageViewState extends State<_QuranPageView> {
 
     // Onboarding Hint
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Tip: Long press on any verse to select and play audio.',
-          ),
+        SnackBar(
+          content: Text(l10n.tr('tipLongPress')),
           duration: Duration(seconds: 4),
           behavior: SnackBarBehavior.floating,
         ),
@@ -103,10 +102,18 @@ class _QuranPageViewState extends State<_QuranPageView> {
         .toList();
 
     if (urls.isNotEmpty) {
+      final l10n = AppLocalizations.of(context);
       context.read<AudioPlayerBloc>().add(PlayPlaylistEvent(urls));
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Playing ${_selectedVerses.length} verses...')),
+        SnackBar(
+          content: Text(
+            l10n.tr(
+              'playingVerses',
+              params: {'count': '${_selectedVerses.length}'},
+            ),
+          ),
+        ),
       );
     }
   }
@@ -116,6 +123,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFFF8E7);
     final textColor = isDark ? Colors.white : Colors.black;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -132,7 +140,11 @@ class _QuranPageViewState extends State<_QuranPageView> {
               _pageController.jumpToPage(lastPage - 1);
 
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Resumed from page $lastPage')),
+                SnackBar(
+                  content: Text(
+                    l10n.tr('resumedFromPage', params: {'page': '$lastPage'}),
+                  ),
+                ),
               );
             }
           }
@@ -152,8 +164,8 @@ class _QuranPageViewState extends State<_QuranPageView> {
                       context.read<QuranReaderBloc>().add(
                         SavePageEvent(pageNumber),
                       );
-                      sl<SaveReadingState>()(
-                        SaveReadingStateParams(mode: 'page', page: pageNumber),
+                      context.read<QuranReaderBloc>().add(
+                        SaveReadingStateEvent(mode: 'page', page: pageNumber),
                       );
 
                       if (_showActionBar) {
@@ -165,7 +177,8 @@ class _QuranPageViewState extends State<_QuranPageView> {
                     },
                     itemBuilder: (context, index) {
                       final pageNumber = index + 1;
-                      if (!state.pages.containsKey(pageNumber)) {
+                      if (!state.pages.containsKey(pageNumber) &&
+                          !state.loadingPages.contains(pageNumber)) {
                         context.read<QuranReaderBloc>().add(
                           LoadPageEvent(pageNumber),
                         );
@@ -175,9 +188,16 @@ class _QuranPageViewState extends State<_QuranPageView> {
                           ),
                         );
                       }
-                      final verses = state.pages[pageNumber]!;
+                      final verses = state.pages[pageNumber];
+                      if (verses == null) {
+                        return Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.primaryTeal,
+                          ),
+                        );
+                      }
                       if (verses.isEmpty) {
-                        return const Center(child: Text("Empty Page"));
+                        return Center(child: Text(l10n.tr('emptyPage')));
                       }
 
                       return _QuranSinglePage(
@@ -237,7 +257,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Selected Verses',
+                              l10n.tr('selectedVerses'),
                               style: TextStyle(
                                 color: textColor,
                                 fontWeight: FontWeight.bold,
@@ -245,7 +265,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
                               ),
                             ),
                             Text(
-                              'Tap to play',
+                              l10n.tr('tapToPlay'),
                               style: TextStyle(
                                 color: textColor.withValues(alpha: 0.6),
                                 fontSize: 12,
@@ -261,7 +281,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
                           onPressed: _playSelectedVerses,
                           icon: const Icon(Icons.play_arrow_rounded),
                           color: AppTheme.primaryTeal,
-                          tooltip: 'Play Selection',
+                          tooltip: l10n.tr('playSelectionTooltip'),
                         ),
                         IconButton(
                           onPressed: () {
@@ -272,7 +292,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
                           },
                           icon: const Icon(Icons.close_rounded),
                           color: Colors.grey,
-                          tooltip: 'Close',
+                          tooltip: l10n.tr('closeTooltip'),
                         ),
                       ],
                     ),
@@ -310,6 +330,7 @@ class _QuranSinglePageState extends State<_QuranSinglePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final textSpans = <InlineSpan>[];
     int currentOffset = 0;
     int index = 0;
@@ -359,7 +380,7 @@ class _QuranSinglePageState extends State<_QuranSinglePage> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
-            'Page ${widget.pageNumber}',
+            l10n.tr('pageLabel', params: {'page': '${widget.pageNumber}'}),
             style: TextStyle(color: widget.textColor.withValues(alpha: 0.5)),
           ),
         ),

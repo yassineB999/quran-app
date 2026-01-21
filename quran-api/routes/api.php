@@ -32,6 +32,7 @@ Route::post('/recitation/check', [\App\Http\Controllers\Api\RecitationController
 
 Route::controller(HadithController::class)->group(function () {
     Route::get('/hadith/editions', 'editions');
+    Route::get('/hadith/daily', 'daily');
     Route::get('/hadith/{edition}', 'show');
 });
 

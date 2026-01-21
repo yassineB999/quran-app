@@ -9,6 +9,7 @@ import 'package:quranapp/features/quran/presentation/bloc/quran_event.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_state.dart';
 import 'package:quranapp/features/quran/domain/usecases/save_reading_state.dart';
 import 'package:quranapp/features/quran/presentation/widgets/verse_item.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
 
 class SurahDetailPage extends StatelessWidget {
   final int surahId;
@@ -64,6 +65,7 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor, // Uses Theme
@@ -81,6 +83,10 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
         title: BlocBuilder<QuranBloc, QuranState>(
           builder: (context, state) {
             if (state is QuranLoaded) {
+              final localizedPlace = _localizeRevelationPlace(
+                state.surah.revelationPlace,
+                l10n,
+              );
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -89,7 +95,7 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
                     style: theme.appBarTheme.titleTextStyle, // Uses Theme
                   ),
                   Text(
-                    '${state.surah.name} • ${state.surah.revelationPlace}',
+                    '${state.surah.name} • $localizedPlace',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isDark ? Colors.white70 : Colors.grey[600],
                       fontSize: 12,
@@ -99,7 +105,7 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
               );
             }
             return Text(
-              'Quran Reader',
+              l10n.tr('quranReaderTitle'),
               style: theme.appBarTheme.titleTextStyle,
             );
           },
@@ -157,7 +163,7 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
                             onPressed: () {
                               // Retry logic placeholder
                             },
-                            child: const Text('Go Back'),
+                            child: Text(l10n.tr('goBack')),
                           ),
                         ],
                       ),
@@ -184,4 +190,19 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
       bottomSheet: const MediaPlayer(),
     );
   }
+}
+
+String _localizeRevelationPlace(String value, AppLocalizations l10n) {
+  final normalized = value.trim().toLowerCase();
+  if (normalized == 'meccan' ||
+      normalized == 'makkah' ||
+      normalized == 'makki') {
+    return l10n.tr('revelationPlaceMeccan');
+  }
+  if (normalized == 'medinan' ||
+      normalized == 'madinah' ||
+      normalized == 'madani') {
+    return l10n.tr('revelationPlaceMedinan');
+  }
+  return value;
 }

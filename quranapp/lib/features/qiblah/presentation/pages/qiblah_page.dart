@@ -5,6 +5,7 @@ import 'package:quranapp/core/di/injection_container.dart';
 import 'package:quranapp/features/qiblah/presentation/bloc/qiblah_bloc.dart';
 import 'package:quranapp/features/qiblah/presentation/bloc/qiblah_state.dart';
 import 'package:quranapp/features/qiblah/presentation/widgets/compass_widget.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
 
 class QiblahPage extends StatelessWidget {
   const QiblahPage({super.key});
@@ -49,11 +50,12 @@ class _QiblahViewState extends State<_QiblahView>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Qiblah'),
+        title: Text(l10n.tr('qiblahTitle')),
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
@@ -61,9 +63,9 @@ class _QiblahViewState extends State<_QiblahView>
           unselectedLabelColor: Colors.grey,
           indicatorColor: AppTheme.primaryTeal,
           indicatorSize: TabBarIndicatorSize.tab,
-          tabs: const [
-            Tab(text: 'Map'),
-            Tab(text: 'Compass'),
+          tabs: [
+            Tab(text: l10n.tr('mapTab')),
+            Tab(text: l10n.tr('compassTab')),
           ],
         ),
       ),
@@ -74,7 +76,7 @@ class _QiblahViewState extends State<_QiblahView>
           // Map Tab (Placeholder)
           Center(
             child: Text(
-              'Map View Coming Soon',
+              l10n.tr('mapViewComingSoon'),
               style: theme.textTheme.bodyLarge,
             ),
           ),
@@ -109,7 +111,7 @@ class _QiblahViewState extends State<_QiblahView>
                           onPressed: () {
                             context.read<QiblahBloc>().add(InitQiblahEvent());
                           },
-                          child: const Text('Allow Location Access'),
+                          child: Text(l10n.tr('allowLocationAccess')),
                         ),
                       ],
                     ),
@@ -140,14 +142,20 @@ class _QiblahViewState extends State<_QiblahView>
                         child: Column(
                           children: [
                             _buildInfoRow(
-                              'QIBLAH FROM THE NORTH',
+                              l10n.tr('qiblahFromNorthLabel'),
                               '${data.qiblahBearing.toStringAsFixed(1)}°',
                               isDark,
                             ),
                             const Divider(height: 32),
                             _buildInfoRow(
-                              'DISTANCE',
-                              '${data.distanceInKm.toStringAsFixed(1)} kms',
+                              l10n.tr('distanceLabel'),
+                              l10n.tr(
+                                'distanceValue',
+                                params: {
+                                  'distance':
+                                      data.distanceInKm.toStringAsFixed(1),
+                                },
+                              ),
                               isDark,
                             ),
                           ],

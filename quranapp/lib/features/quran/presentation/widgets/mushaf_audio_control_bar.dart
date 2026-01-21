@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quranapp/config/theme/app_theme.dart';
+import 'package:quranapp/l10n/app_localizations.dart';
 
 /// Audio control bar shown when text is hidden during recitation.
 class MushafAudioControlBar extends StatelessWidget {
@@ -26,6 +27,7 @@ class MushafAudioControlBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -65,13 +67,19 @@ class MushafAudioControlBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      surahName ?? 'Recitation Mode',
+                      surahName ?? l10n.tr('recitationMode'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      'Ayah $currentAyah of $totalAyahs',
+                      l10n.tr(
+                        'ayahOf',
+                        params: {
+                          'current': '$currentAyah',
+                          'total': '$totalAyahs',
+                        },
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.6,
@@ -105,7 +113,7 @@ class MushafAudioControlBar extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'REC',
+                        l10n.tr('recLabel'),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: Colors.red,
                           fontWeight: FontWeight.bold,
@@ -173,10 +181,10 @@ class MushafAudioControlBar extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             isProcessing
-                ? 'Checking recitation...'
+                ? l10n.tr('checkingRecitation')
                 : isRecording
-                ? 'Tap to stop'
-                : 'Tap to start reciting',
+                ? l10n.tr('tapToStop')
+                : l10n.tr('tapToStartReciting'),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),

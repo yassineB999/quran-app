@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 class HadithController extends Controller
 {
     private string $baseUrl = 'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1';
+    private int $maxCacheBytes = 15000000;
 
     public function editions(Request $request)
     {
@@ -122,19 +123,21 @@ class HadithController extends Controller
 
         $payload = $response->json();
 
-        HadithCache::updateOrCreate(
-            [
-                'type' => $type,
-                'edition' => $edition,
-                'hadith_number' => $number !== null ? (int)$number : null,
-                'section_number' => $section !== null ? (int)$section : null,
-            ],
-            [
-                'payload' => $payload,
-                'source_url' => $url,
-                'fetched_at' => now(),
-            ]
-        );
+        if ($this->canCachePayload($payload)) {
+            HadithCache::updateOrCreate(
+                [
+                    'type' => $type,
+                    'edition' => $edition,
+                    'hadith_number' => $number !== null ? (int)$number : null,
+                    'section_number' => $section !== null ? (int)$section : null,
+                ],
+                [
+                    'payload' => $payload,
+                    'source_url' => $url,
+                    'fetched_at' => now(),
+                ]
+            );
+        }
 
         $pagination = null;
         if (is_array($payload) && isset($payload['hadiths']) && is_array($payload['hadiths']) && array_is_list($payload['hadiths'])) {
@@ -147,6 +150,67 @@ class HadithController extends Controller
             'data' => $payload,
             'pagination' => $pagination,
             'cached' => false,
+        ]);
+    }
+
+    public function daily(Request $request)
+    {
+        $arabicEdition = (string)$request->query('arabic_edition', 'ara-muslim');
+        $englishEdition = (string)$request->query('english_edition', 'eng-muslim');
+        $refresh = $request->boolean('refresh');
+        $timezone = $request->query('tz');
+
+        $arabicPayload = $this->fetchEdition($arabicEdition, $refresh);
+        if (!$arabicPayload) {
+            return response()->json(['message' => 'Failed to fetch Arabic hadith data'], 502);
+        }
+
+        $englishPayload = $this->fetchEdition($englishEdition, $refresh);
+        if (!$englishPayload) {
+            return response()->json(['message' => 'Failed to fetch English hadith data'], 502);
+        }
+
+        $arabicHadiths = $this->extractHadiths($arabicPayload);
+        $englishHadiths = $this->extractHadiths($englishPayload);
+        $limit = min(count($arabicHadiths), count($englishHadiths));
+        $validIndices = [];
+        for ($i = 0; $i < $limit; $i++) {
+            if ($this->hasText($arabicHadiths[$i] ?? null) && $this->hasText($englishHadiths[$i] ?? null)) {
+                $validIndices[] = $i;
+            }
+        }
+
+        if (empty($validIndices)) {
+            return response()->json(['message' => 'Hadith data is empty'], 502);
+        }
+
+        $today = $timezone ? now($timezone) : now();
+        $seed = $today->format('Y-m-d') . '|' . $arabicEdition . '|' . $englishEdition;
+        $index = $this->pickDailyIndex(count($validIndices), $seed);
+        $pickedIndex = $validIndices[$index];
+        $arabicHadith = $arabicHadiths[$pickedIndex] ?? [];
+        $englishHadith = $englishHadiths[$pickedIndex] ?? [];
+
+        $arabicText = $this->extractText($arabicHadith, ['arabic', 'arab', 'text', 'hadith', 'body']);
+        $englishText = $this->extractText($englishHadith, ['translation', 'text', 'hadith', 'body']);
+        $referenceName = $this->extractCollectionName($englishPayload)
+            ?? $this->extractCollectionName($arabicPayload)
+            ?? $englishEdition;
+        $number = $arabicHadith['hadithnumber'] ?? $englishHadith['hadithnumber'] ?? null;
+        $reference = $referenceName;
+        if ($number) {
+            $reference .= ' • Hadith ' . $number;
+        }
+
+        return response()->json([
+            'data' => [
+                'arabic' => $arabicText,
+                'translation' => $englishText,
+                'reference' => $reference,
+                'number' => $number,
+                'arabic_edition' => $arabicEdition,
+                'english_edition' => $englishEdition,
+            ],
         ]);
     }
 
@@ -177,6 +241,114 @@ class HadithController extends Controller
                 'has_more' => $page < $totalPages,
             ],
         ];
+    }
+
+    private function fetchEdition(string $edition, bool $refresh): ?array
+    {
+        $cache = HadithCache::where('type', 'edition')->where('edition', $edition)->first();
+        if ($cache && !$refresh) {
+            return $cache->payload;
+        }
+
+        $url = "{$this->baseUrl}/editions/{$edition}.min.json";
+        $response = Http::timeout(30)->get($url);
+        if ($response->failed()) {
+            return null;
+        }
+
+        $payload = $response->json();
+
+        if ($this->canCachePayload($payload)) {
+            HadithCache::updateOrCreate(
+                [
+                    'type' => 'edition',
+                    'edition' => $edition,
+                ],
+                [
+                    'payload' => $payload,
+                    'source_url' => $url,
+                    'fetched_at' => now(),
+                ]
+            );
+        }
+
+        return $payload;
+    }
+
+    private function canCachePayload($payload): bool
+    {
+        $encoded = json_encode($payload);
+        if ($encoded === false) {
+            return false;
+        }
+        return strlen($encoded) <= $this->maxCacheBytes;
+    }
+
+    private function extractHadiths($payload): array
+    {
+        if (!is_array($payload)) {
+            return [];
+        }
+        if (isset($payload['hadiths']) && is_array($payload['hadiths'])) {
+            return $payload['hadiths'];
+        }
+        if (array_is_list($payload)) {
+            return $payload;
+        }
+        return [];
+    }
+
+    private function hasText($item): bool
+    {
+        if (!is_array($item)) {
+            return false;
+        }
+        $text = $item['text'] ?? null;
+        return is_string($text) && trim($text) !== '';
+    }
+
+    private function pickDailyIndex(int $count, string $seed): int
+    {
+        if ($count <= 1) {
+            return 0;
+        }
+        $hash = sprintf('%u', crc32($seed));
+        return ((int)$hash) % $count;
+    }
+
+    private function extractCollectionName($payload): ?string
+    {
+        if (!is_array($payload)) {
+            return null;
+        }
+        $metadata = $payload['metadata'] ?? null;
+        if (is_array($metadata)) {
+            $name = $metadata['name'] ?? $metadata['book'] ?? null;
+            if (is_string($name) && trim($name) !== '') {
+                return $name;
+            }
+        }
+        $name = $payload['name'] ?? $payload['book'] ?? null;
+        if (is_string($name) && trim($name) !== '') {
+            return $name;
+        }
+        return null;
+    }
+
+    private function extractText($source, array $keys): ?string
+    {
+        if (!is_array($source)) {
+            return null;
+        }
+
+        foreach ($keys as $key) {
+            $value = $source[$key] ?? null;
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
+        }
+
+        return null;
     }
 
     private function filterEditionsByLanguage($payload, string $lang)
