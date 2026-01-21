@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\SurahController;
 use App\Http\Controllers\Api\ReciterController;
 use App\Http\Controllers\Api\PageController;
+use App\Http\Controllers\Api\HadithController;
+use App\Http\Controllers\Api\AdhkarController;
+use App\Http\Controllers\Api\HijriCalendarController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -26,3 +29,15 @@ Route::controller(PageController::class)->group(function () {
 });
 
 Route::post('/recitation/check', [\App\Http\Controllers\Api\RecitationController::class, 'check']);
+
+Route::controller(HadithController::class)->group(function () {
+    Route::get('/hadith/editions', 'editions');
+    Route::get('/hadith/{edition}', 'show');
+});
+
+Route::get('/adhkar/{category}', [AdhkarController::class, 'show']);
+
+Route::controller(HijriCalendarController::class)->group(function () {
+    Route::get('/hijri/calendar/{year}', 'year');
+    Route::get('/hijri/calendar/{year}/{month}', 'month');
+});
