@@ -164,20 +164,32 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
           await audioService.loadAudio(audioInfo.audioUrl);
           _duration = audioService.duration ?? Duration.zero;
 
-          // Explicitly emit PAUSED state and ensure player is paused
-          await audioService.pause();
-
-          emit(
-            AudioPlayerPaused(
-              surahId: _currentSurahId,
-              currentReciter: _currentReciter,
-              availableReciters: _reciters,
-              position: Duration.zero,
-              duration: _duration,
-              speed: audioService.speed,
-              isRepeating: audioService.loopMode != LoopMode.off,
-            ),
-          );
+          final isPlayingNow = audioService.isPlaying;
+          if (isPlayingNow) {
+            emit(
+              AudioPlayerPlaying(
+                surahId: _currentSurahId,
+                currentReciter: _currentReciter,
+                availableReciters: _reciters,
+                position: audioService.position,
+                duration: _duration,
+                speed: audioService.speed,
+                isRepeating: audioService.loopMode != LoopMode.off,
+              ),
+            );
+          } else {
+            emit(
+              AudioPlayerPaused(
+                surahId: _currentSurahId,
+                currentReciter: _currentReciter,
+                availableReciters: _reciters,
+                position: Duration.zero,
+                duration: _duration,
+                speed: audioService.speed,
+                isRepeating: audioService.loopMode != LoopMode.off,
+              ),
+            );
+          }
         } catch (e) {
           emit(
             AudioPlayerError(
@@ -193,26 +205,34 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   }
 
   Future<void> _onPlay(PlayEvent event, Emitter<AudioPlayerState> emit) async {
-    // Reset completed flag
     _isAudioCompleted = false;
-
-    // The service will automatically seek to start if completed
-    await audioService.play();
-
-    if (state is AudioPlayerPaused) {
-      final s = state as AudioPlayerPaused;
-      emit(
-        AudioPlayerPlaying(
-          surahId: s.surahId,
-          currentReciter: s.currentReciter,
-          availableReciters: s.availableReciters,
-          position: audioService.position,
-          duration: s.duration,
-          speed: s.speed,
-          isRepeating: s.isRepeating,
-        ),
-      );
+    final current = state;
+    if (current is AudioPlayerPlaying) {
+      await audioService.play();
+      return;
     }
+    final surahId = current.surahId;
+    final reciter = current.currentReciter ?? _currentReciter;
+    final reciters = current.availableReciters.isNotEmpty
+        ? current.availableReciters
+        : _reciters;
+    final duration = current.duration != Duration.zero
+        ? current.duration
+        : _duration;
+    final speed = current.speed;
+    final isRepeating = current.isRepeating;
+    emit(
+      AudioPlayerPlaying(
+        surahId: surahId,
+        currentReciter: reciter,
+        availableReciters: reciters,
+        position: audioService.position,
+        duration: duration,
+        speed: speed,
+        isRepeating: isRepeating,
+      ),
+    );
+    await audioService.play();
   }
 
   Future<void> _onPause(

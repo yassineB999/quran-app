@@ -25,4 +25,7 @@ class ApiEndpoints {
   // Hijri calendar endpoints
   static String hijriCalendarMonth(int year, int month) =>
       '/hijri/calendar/$year/$month';
+
+  // Mosque endpoints
+  static const String nearbyMosques = '/mosques/nearby';
 }

@@ -14,6 +14,12 @@ class MediaPlayer extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
+      buildWhen: (previous, current) {
+        return previous.status != current.status ||
+            previous.isRepeating != current.isRepeating ||
+            previous.speed != current.speed ||
+            previous.position != current.position;
+      },
       builder: (context, state) {
         final isPlaying = state is AudioPlayerPlaying;
         final isLoading = state is AudioPlayerLoading;
@@ -167,12 +173,11 @@ class MediaPlayer extends StatelessWidget {
     return Column(
       children: [
         SliderTheme(
-          data: SliderThemeData(
-            trackHeight: 3,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 4,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
             activeTrackColor: Colors.white,
-            inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+            inactiveTrackColor: Colors.white.withValues(alpha: 0.18),
             thumbColor: Colors.white,
             overlayColor: Colors.white.withValues(alpha: 0.2),
           ),
@@ -240,19 +245,26 @@ class MediaPlayer extends StatelessWidget {
                     const PreviousSurahEvent(),
                   );
                 },
-          icon: const Icon(Icons.skip_previous, color: Colors.white, size: 32),
+          icon: const Icon(Icons.skip_previous, color: Colors.white, size: 34),
         ),
         Container(
-          width: 64,
-          height: 64,
+          width: 72,
+          height: 72,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withValues(alpha: 0.95),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 8,
+                blurRadius: 10,
                 offset: const Offset(0, 2),
+              ),
+              BoxShadow(
+                color:
+                    (isDark ? const Color(0xFF00897B) : const Color(0xFF00695C))
+                        .withValues(alpha: 0.25),
+                blurRadius: 16,
+                spreadRadius: 1,
               ),
             ],
           ),
@@ -269,21 +281,27 @@ class MediaPlayer extends StatelessWidget {
                     ),
                   ),
                 )
-              : IconButton(
-                  onPressed: () {
-                    final bloc = context.read<AudioPlayerBloc>();
-                    if (isPlaying) {
-                      bloc.add(const PauseEvent());
-                    } else {
-                      bloc.add(const PlayEvent());
-                    }
-                  },
-                  icon: Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    color: isDark
-                        ? const Color(0xFF00897B)
-                        : const Color(0xFF00695C),
-                    size: 36,
+              : AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: IconButton(
+                    key: ValueKey(isPlaying),
+                    onPressed: () {
+                      final bloc = context.read<AudioPlayerBloc>();
+                      if (isPlaying) {
+                        bloc.add(const PauseEvent());
+                      } else {
+                        bloc.add(const PlayEvent());
+                      }
+                    },
+                    icon: Icon(
+                      isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                      color: isDark
+                          ? const Color(0xFF00897B)
+                          : const Color(0xFF00695C),
+                      size: 40,
+                    ),
                   ),
                 ),
         ),
@@ -293,7 +311,7 @@ class MediaPlayer extends StatelessWidget {
               : () {
                   context.read<AudioPlayerBloc>().add(const NextSurahEvent());
                 },
-          icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
+          icon: const Icon(Icons.skip_next, color: Colors.white, size: 34),
         ),
         Container(
           width: 40,

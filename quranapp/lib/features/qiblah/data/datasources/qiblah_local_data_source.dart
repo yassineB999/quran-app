@@ -8,6 +8,8 @@ import 'package:quranapp/features/qiblah/domain/entities/qiblah_direction.dart';
 abstract class QiblahLocalDataSource {
   Stream<QiblahDirection> getQiblahStream();
   Future<bool> requestLocationPermission();
+  Future<Position> getCurrentPosition();
+  Stream<Position> getPositionStream();
 }
 
 class QiblahLocalDataSourceImpl implements QiblahLocalDataSource {
@@ -31,28 +33,7 @@ class QiblahLocalDataSourceImpl implements QiblahLocalDataSource {
 
   @override
   Stream<QiblahDirection> getQiblahStream() async* {
-    // 1. Get current position (User might wait here)
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw const ServerException(message: 'Location services are disabled.');
-    }
-
-    // Check permission again just in case
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        throw const ServerException(message: 'Location permission denied.');
-      }
-    }
-
-    final Position position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-      ),
-    );
+    final Position position = await getCurrentPosition();
 
     // 2. Calculate Qiblah Bearing (Static for this session usually)
     final qiblahBearing = _calculateBearing(
@@ -95,6 +76,38 @@ class QiblahLocalDataSourceImpl implements QiblahLocalDataSource {
         longitude: position.longitude,
       );
     });
+  }
+
+  @override
+  Future<Position> getCurrentPosition() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw const ServerException(message: 'Location services are disabled.');
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw const ServerException(message: 'Location permission denied.');
+      }
+    }
+
+    return Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+    );
+  }
+
+  @override
+  Stream<Position> getPositionStream() {
+    return Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 50,
+      ),
+    );
   }
 
   // --- Math Helpers ---

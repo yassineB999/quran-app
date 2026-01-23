@@ -20,6 +20,11 @@ class AppConstants {
   static const String cachedAyahsKey = 'CACHED_AYAHS';
   static const String cachedSettingsKey = 'CACHED_SETTINGS';
 
+  static const String openStreetMapTileUrl =
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  static const String osrmRouteUrl =
+      'https://router.project-osrm.org/route/v1/driving';
+
   // Prevent instantiation
   AppConstants._();
 }

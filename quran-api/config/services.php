@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'openstreetmap' => [
+        'overpass_url' => env(
+            'OVERPASS_API_URL',
+            'https://overpass-api.de/api/interpreter'
+        ),
+        'nearby_radius_m' => env('OVERPASS_NEARBY_RADIUS_M', 5000),
+        'nearby_max_results' => env('OVERPASS_NEARBY_MAX_RESULTS', 20),
+    ],
+
 ];

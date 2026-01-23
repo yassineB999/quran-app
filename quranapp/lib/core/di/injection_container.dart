@@ -40,10 +40,17 @@ import 'package:quranapp/features/home/presentation/bloc/home_cubit.dart';
 
 // Qiblah feature imports
 import 'package:quranapp/features/qiblah/data/datasources/qiblah_local_data_source.dart';
+import 'package:quranapp/features/qiblah/data/datasources/qiblah_remote_data_source.dart';
 import 'package:quranapp/features/qiblah/data/repositories/qiblah_repository_impl.dart';
+import 'package:quranapp/features/qiblah/domain/usecases/check_location_permission.dart';
+import 'package:quranapp/features/qiblah/domain/usecases/get_current_location.dart';
+import 'package:quranapp/features/qiblah/domain/usecases/get_location_stream.dart';
+import 'package:quranapp/features/qiblah/domain/usecases/get_nearby_mosques.dart';
+import 'package:quranapp/features/qiblah/domain/usecases/get_route_points.dart';
 import 'package:quranapp/features/qiblah/domain/repositories/qiblah_repository.dart';
 import 'package:quranapp/features/qiblah/domain/usecases/get_qiblah_stream.dart';
 import 'package:quranapp/features/qiblah/presentation/bloc/qiblah_bloc.dart';
+import 'package:quranapp/features/qiblah/presentation/bloc/nearby_mosques_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -150,12 +157,32 @@ Future<void> init() async {
 
   //! Features - Qiblah
   sl.registerFactory(() => QiblahBloc(getQiblahStream: sl()));
+  sl.registerFactory(
+    () => NearbyMosquesBloc(
+      checkLocationPermission: sl(),
+      getCurrentLocation: sl(),
+      getLocationStream: sl(),
+      getNearbyMosques: sl(),
+    ),
+  );
   sl.registerLazySingleton(() => GetQiblahStream(sl()));
+  sl.registerLazySingleton(() => CheckLocationPermission(sl()));
+  sl.registerLazySingleton(() => GetCurrentLocation(sl()));
+  sl.registerLazySingleton(() => GetLocationStream(sl()));
+  sl.registerLazySingleton(() => GetNearbyMosques(sl()));
+  sl.registerLazySingleton(() => GetRoutePoints(sl()));
   sl.registerLazySingleton<QiblahRepository>(
-    () => QiblahRepositoryImpl(localDataSource: sl()),
+    () => QiblahRepositoryImpl(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
   );
   sl.registerLazySingleton<QiblahLocalDataSource>(
     () => QiblahLocalDataSourceImpl(),
+  );
+  sl.registerLazySingleton<QiblahRemoteDataSource>(
+    () => QiblahRemoteDataSourceImpl(dioClient: sl()),
   );
 
   //! External

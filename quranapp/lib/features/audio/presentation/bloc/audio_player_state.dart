@@ -11,6 +11,7 @@ abstract class AudioPlayerState extends Equatable {
   final double speed;
   final bool isRepeating;
   final String? errorMessage;
+  final String status;
 
   const AudioPlayerState({
     this.surahId = 1,
@@ -21,6 +22,7 @@ abstract class AudioPlayerState extends Equatable {
     this.speed = 1.0,
     this.isRepeating = false,
     this.errorMessage,
+    this.status = 'initial',
   });
 
   @override
@@ -33,12 +35,13 @@ abstract class AudioPlayerState extends Equatable {
     speed,
     isRepeating,
     errorMessage,
+    status,
   ];
 }
 
 /// Initial state
 class AudioPlayerInitial extends AudioPlayerState {
-  const AudioPlayerInitial() : super();
+  const AudioPlayerInitial() : super(status: 'initial');
 }
 
 /// Loading state
@@ -47,7 +50,7 @@ class AudioPlayerLoading extends AudioPlayerState {
     super.surahId,
     super.currentReciter,
     super.availableReciters,
-  });
+  }) : super(status: 'loading');
 }
 
 /// Playing state
@@ -60,7 +63,7 @@ class AudioPlayerPlaying extends AudioPlayerState {
     required super.duration,
     required super.speed,
     required super.isRepeating,
-  });
+  }) : super(status: 'playing');
 
   AudioPlayerPlaying copyWith({
     int? surahId,
@@ -93,7 +96,7 @@ class AudioPlayerPaused extends AudioPlayerState {
     required super.duration,
     required super.speed,
     required super.isRepeating,
-  });
+  }) : super(status: 'paused');
 
   AudioPlayerPaused copyWith({
     int? surahId,
@@ -123,5 +126,5 @@ class AudioPlayerError extends AudioPlayerState {
     super.surahId,
     super.currentReciter,
     super.availableReciters,
-  });
+  }) : super(status: 'error');
 }

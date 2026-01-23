@@ -33,7 +33,7 @@ class GreetingHeader extends StatelessWidget {
               );
 
         return SizedBox(
-          height: 160,
+          height: 190,
           width: double.infinity,
           child: Stack(
             fit: StackFit.expand,

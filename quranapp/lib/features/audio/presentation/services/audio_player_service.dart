@@ -72,7 +72,7 @@ class AudioPlayerService {
         .map((url) => AudioSource.uri(Uri.parse(url)))
         .toList(growable: false);
     await _player.setAudioSources(sources, initialIndex: 0);
-    await _player.play();
+    _player.play();
   }
 
   /// Load audio from local file

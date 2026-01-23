@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\HadithController;
 use App\Http\Controllers\Api\AdhkarController;
 use App\Http\Controllers\Api\HijriCalendarController;
+use App\Http\Controllers\Api\MosqueController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -42,3 +43,5 @@ Route::controller(HijriCalendarController::class)->group(function () {
     Route::get('/hijri/calendar/{year}', 'year');
     Route::get('/hijri/calendar/{year}/{month}', 'month');
 });
+
+Route::get('/mosques/nearby', [MosqueController::class, 'nearby']);
