@@ -47,7 +47,7 @@ class SeedReciters extends Command
                     [
                         'name' => $reciterData['name'],
                         'rewaya' => 'warsh',
-                        'server_url' => $warshMoshaf['server'],
+                        'server_url' => trim($warshMoshaf['server']),
                     ]
                 );
                 $this->info("Seeded: {$reciterData['name']}");

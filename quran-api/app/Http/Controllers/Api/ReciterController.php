@@ -28,7 +28,7 @@ class ReciterController extends Controller
 
         $formattedSurahId = str_pad($surahId, 3, '0', STR_PAD_LEFT);
 
-        $baseUrl = rtrim($reciter->server_url, '/');
+        $baseUrl = rtrim(trim($reciter->server_url), '/');
         $audioUrl = "{$baseUrl}/{$formattedSurahId}.mp3";
 
         return response()->json([

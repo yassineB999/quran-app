@@ -24,7 +24,17 @@ async def lifespan(app: FastAPI):
     # Load model from the current directory (where main.py is located)
     import os
     model_dir = os.path.dirname(os.path.abspath(__file__))
-    ml_models["model"] = Wav2Vec2ForCTC.from_pretrained(model_dir).eval()
+    
+    try:
+        # Try loading from local directory first
+        print(f"Attempting to load model from local directory: {model_dir}")
+        ml_models["model"] = Wav2Vec2ForCTC.from_pretrained(model_dir).eval()
+        print("Successfully loaded local model.")
+    except Exception as e:
+        print(f"Could not load local model: {e}")
+        print("Fallback: Loading base model from Hugging Face (elgeish/wav2vec2-large-xlsr-53-arabic)...")
+        # Fallback to the base model if local fine-tuned model is missing
+        ml_models["model"] = Wav2Vec2ForCTC.from_pretrained("elgeish/wav2vec2-large-xlsr-53-arabic").eval()
     
     # Load processor from the Hub since local files (vocab.json, etc.) are missing
     # Base model used: elgeish/wav2vec2-large-xlsr-53-arabic

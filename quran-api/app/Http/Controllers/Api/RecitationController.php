@@ -69,7 +69,9 @@ class RecitationController extends Controller
         }
 
         // 2. Forward to Python AI API
-        $pythonApiUrl = 'http://127.0.0.1:8000/recognize';
+        // Ensure we are using the internal docker network URL if running inside docker, 
+        // or the provided env var.
+        $pythonApiUrl = env('PYTHON_API_URL', 'http://quran_ai_service:8000/recognize');
         Log::info("Forwarding request to Python API: {$pythonApiUrl}");
 
         // Prepare parameters
@@ -82,7 +84,9 @@ class RecitationController extends Controller
         }
 
         try {
-            $response = Http::attach(
+            $response = Http::timeout(300) // 5 minutes timeout for slow AI processing
+                ->connectTimeout(10) // 10 seconds connection timeout
+                ->attach(
                 'file',
                 file_get_contents($audioPath),
                 $originalName

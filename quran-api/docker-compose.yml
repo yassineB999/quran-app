@@ -1,6 +1,52 @@
 version: "3.8"
 
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quran_api_app
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      APP_NAME: "${APP_NAME:-Laravel}"
+      APP_ENV: "${APP_ENV:-local}"
+      APP_KEY: "${APP_KEY:-}"
+      APP_DEBUG: "${APP_DEBUG:-true}"
+      APP_URL: "${APP_URL:-http://localhost}"
+      DB_CONNECTION: mongodb
+      DB_HOST: mongo
+      DB_PORT: 27017
+      DB_DATABASE: "${MONGO_INITDB_DATABASE:-quran_api}"
+      DB_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:-quran_admin}"
+      DB_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:-change_this_password}"
+      PYTHON_API_URL: "${PYTHON_API_URL:-http://quran_ai_service:8000/recognize}"
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    command: >
+      sh -c "composer install --no-interaction --optimize-autoloader && php artisan key:generate && php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=8001"
+    depends_on:
+      - mongo
+      - quranai
+    networks:
+      - quran_network
+
+  quranai:
+    build:
+      context: ../quranai
+      dockerfile: Dockerfile
+    container_name: quran_ai_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../quranai:/app
+      - /app/ml_models
+    networks:
+      - quran_network
+
   mongo:
     image: mongo:7
     container_name: quran_mongo
@@ -13,6 +59,8 @@ services:
       - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - quran_network
 
   mongo-express:
     image: mongo-express:latest
@@ -31,7 +79,12 @@ services:
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-change_this_password}
     ports:
       - "${MONGO_EXPRESS_PORT:-8081}:8081"
+    networks:
+      - quran_network
 
 volumes:
   mongo_data:
 
+networks:
+  quran_network:
+    driver: bridge
