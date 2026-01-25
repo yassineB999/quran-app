@@ -1,10 +1,7 @@
-import 'package:quranapp/features/qiblah/domain/entities/route_point.dart';
+import 'package:quranapp/features/mosques/domain/entities/route_point.dart';
 
 class RoutePointModel extends RoutePoint {
-  const RoutePointModel({
-    required super.latitude,
-    required super.longitude,
-  });
+  const RoutePointModel({required super.latitude, required super.longitude});
 
   factory RoutePointModel.fromCoordinates(List<dynamic> coordinates) {
     return RoutePointModel(

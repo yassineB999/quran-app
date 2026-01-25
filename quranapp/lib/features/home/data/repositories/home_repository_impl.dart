@@ -17,38 +17,34 @@ class HomeRepositoryImpl implements HomeRepository {
   });
 
   @override
-  Future<Either<Failure, DailyHadith>> getDailyHadith() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final hadith = await remoteDataSource.getDailyHadith();
-        return Right(hadith);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      } on NetworkException catch (e) {
-        return Left(NetworkFailure(e.message));
-      } catch (e) {
-        return Left(ServerFailure(e.toString()));
-      }
-    } else {
-      return const Left(NetworkFailure());
-    }
+  Future<Either<Failure, DailyHadith>> getDailyHadith() {
+    return _performRequest<DailyHadith>(
+      () async => await remoteDataSource.getDailyHadith(),
+    );
   }
 
   @override
-  Future<Either<Failure, HijriDate>> getHijriDate(DateTime date) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final hijriDate = await remoteDataSource.getHijriDate(date);
-        return Right(hijriDate);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      } on NetworkException catch (e) {
-        return Left(NetworkFailure(e.message));
-      } catch (e) {
-        return Left(ServerFailure(e.toString()));
-      }
-    } else {
+  Future<Either<Failure, HijriDate>> getHijriDate(DateTime date) {
+    return _performRequest<HijriDate>(
+      () async => await remoteDataSource.getHijriDate(date),
+    );
+  }
+
+  Future<Either<Failure, T>> _performRequest<T>(
+    Future<T> Function() computation,
+  ) async {
+    if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
+    }
+    try {
+      final result = await computation();
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

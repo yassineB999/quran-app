@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:quranapp/core/error/failures.dart';
-import 'package:quranapp/features/qiblah/domain/entities/user_location.dart';
-import 'package:quranapp/features/qiblah/domain/repositories/qiblah_repository.dart';
+import 'package:quranapp/core/location/domain/entities/user_location.dart';
+import 'package:quranapp/core/location/domain/repositories/location_repository.dart';
 
 class GetLocationStream {
-  final QiblahRepository repository;
+  final LocationRepository repository;
 
   GetLocationStream(this.repository);
 

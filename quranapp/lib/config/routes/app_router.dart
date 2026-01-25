@@ -2,6 +2,8 @@ import 'package:go_router/go_router.dart';
 import 'package:quranapp/features/home/presentation/pages/home_page.dart';
 import 'package:quranapp/features/quran/presentation/pages/surah_list_page.dart';
 import 'package:quranapp/features/quran/presentation/pages/surah_detail_page.dart';
+import 'package:quranapp/features/mosques/presentation/pages/mosques_page.dart';
+import 'package:quranapp/features/calendar/presentation/pages/calendar_page.dart';
 import 'package:quranapp/features/qiblah/presentation/pages/qiblah_page.dart';
 import 'package:quranapp/features/quran/presentation/pages/quran_reading_page.dart';
 import 'package:quranapp/features/quran/presentation/pages/mushaf_recitation_page.dart';
@@ -30,8 +32,8 @@ class AppRouter {
             ],
           ),
           GoRoute(
-            path: '/qiblah',
-            builder: (context, state) => const QiblahPage(),
+            path: '/mosques',
+            builder: (context, state) => const MosquesPage(),
           ),
           GoRoute(
             path: '/audio',
@@ -60,6 +62,11 @@ class AppRouter {
           final surahId = int.tryParse(state.pathParameters['surahId']!) ?? 1;
           return MushafRecitationPage(surahId: surahId);
         },
+      ),
+      GoRoute(path: '/qiblah', builder: (context, state) => const QiblahPage()),
+      GoRoute(
+        path: '/calendar',
+        builder: (context, state) => const CalendarPage(),
       ),
     ],
   );

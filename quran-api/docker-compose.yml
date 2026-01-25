@@ -22,11 +22,12 @@ services:
       DB_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:-quran_admin}"
       DB_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:-change_this_password}"
       PYTHON_API_URL: "${PYTHON_API_URL:-http://quran_ai_service:8000/recognize}"
+      MONGO_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME:-quran_admin}:${MONGO_INITDB_ROOT_PASSWORD:-change_this_password}@mongo:${MONGO_PORT:-27017}/${MONGO_INITDB_DATABASE:-quran_api}?authSource=admin"
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
     command: >
-      sh -c "composer install --no-interaction --optimize-autoloader && php artisan key:generate && php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=8001"
+      sh -c "composer install --no-interaction --optimize-autoloader && php artisan config:clear && php artisan key:generate && php artisan serve --host=0.0.0.0 --port=8001"
     depends_on:
       - mongo
       - quranai

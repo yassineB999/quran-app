@@ -20,17 +20,25 @@ class GreetingHeader extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
+        final locale = Localizations.localeOf(context).languageCode;
         final hijriDate = state.hijriDate;
-        final hijriText = hijriDate == null
-            ? l10n.tr('hijriDatePlaceholder')
-            : l10n.tr(
-                'hijriDateFormat',
-                params: {
-                  'day': hijriDate.day.toString(),
-                  'month': hijriDate.month,
-                  'year': hijriDate.year.toString(),
-                },
-              );
+        final isHijriLoading = state.isHijriLoading;
+
+        String? hijriText;
+        if (hijriDate != null) {
+          final weekday = locale == 'ar'
+              ? hijriDate.weekdayAr
+              : hijriDate.weekdayEn;
+          final datePart = l10n.tr(
+            'hijriDateFormat',
+            params: {
+              'day': hijriDate.day.toString(),
+              'month': hijriDate.month,
+              'year': hijriDate.year.toString(),
+            },
+          );
+          hijriText = '$weekday, $datePart';
+        }
 
         return SizedBox(
           height: 190,
@@ -60,25 +68,64 @@ class GreetingHeader extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        l10n.tr('greeting'),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            l10n.tr('greeting'),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 20,
+                                ),
+                          ),
+                          const SizedBox(width: 8),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => context.push('/calendar'),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.calendar_month_outlined,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        hijriText,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 12,
-                          letterSpacing: 0.2,
+                      if (isHijriLoading && hijriText == null)
+                        SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        )
+                      else
+                        Text(
+                          hijriText ?? '',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontSize: 12,
+                                letterSpacing: 0.2,
+                              ),
                         ),
-                      ),
                     ],
                   ),
                 ),

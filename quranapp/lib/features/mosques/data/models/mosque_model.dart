@@ -1,7 +1,7 @@
-import 'package:quranapp/features/qiblah/domain/entities/nearby_mosque.dart';
+import 'package:quranapp/features/mosques/domain/entities/mosque.dart';
 
-class NearbyMosqueModel extends NearbyMosque {
-  const NearbyMosqueModel({
+class MosqueModel extends Mosque {
+  const MosqueModel({
     required super.id,
     required super.name,
     required super.city,
@@ -10,8 +10,8 @@ class NearbyMosqueModel extends NearbyMosque {
     required super.distanceKm,
   });
 
-  factory NearbyMosqueModel.fromJson(Map<String, dynamic> json) {
-    return NearbyMosqueModel(
+  factory MosqueModel.fromJson(Map<String, dynamic> json) {
+    return MosqueModel(
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       city: (json['city'] ?? '').toString(),

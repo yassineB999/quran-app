@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-class NearbyMosque extends Equatable {
+class Mosque extends Equatable {
   final String id;
   final String name;
   final String city;
@@ -8,7 +8,7 @@ class NearbyMosque extends Equatable {
   final double longitude;
   final double distanceKm;
 
-  const NearbyMosque({
+  const Mosque({
     required this.id,
     required this.name,
     required this.city,
@@ -18,12 +18,5 @@ class NearbyMosque extends Equatable {
   });
 
   @override
-  List<Object?> get props => [
-        id,
-        name,
-        city,
-        latitude,
-        longitude,
-        distanceKm,
-      ];
+  List<Object?> get props => [id, name, city, latitude, longitude, distanceKm];
 }

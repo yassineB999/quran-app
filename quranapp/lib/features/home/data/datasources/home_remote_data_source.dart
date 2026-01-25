@@ -46,18 +46,18 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       final payload = response.data;
       final data = payload is Map<String, dynamic> ? payload['data'] : null;
       final days = data is Map<String, dynamic> ? data['data'] : null;
+
       if (days is List) {
         for (final item in days) {
           if (item is! Map<String, dynamic>) continue;
+
           final gregorian = item['gregorian'];
-          final gregorianDay = _extractGregorianDay(gregorian);
-          if (gregorianDay == null) continue;
-          if (int.tryParse(gregorianDay) != date.day) continue;
-          final hijri = item['hijri'];
-          final hijriDate = _extractHijriDate(hijri);
-          if (hijriDate != null) {
-            return hijriDate;
-          }
+          if (gregorian is! Map<String, dynamic>) continue;
+
+          final dayValue = gregorian['day']?.toString();
+          if (dayValue == null || int.tryParse(dayValue) != date.day) continue;
+
+          return HijriDateModel.fromMap(item);
         }
       }
       throw const ServerException(message: 'Hijri date is unavailable');
@@ -69,40 +69,6 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     }
   }
 
-  String? _extractGregorianDay(dynamic gregorian) {
-    if (gregorian is Map<String, dynamic>) {
-      final dayValue = gregorian['day']?.toString();
-      if (dayValue != null && dayValue.trim().isNotEmpty) {
-        return dayValue;
-      }
-      final dateValue = gregorian['date']?.toString();
-      if (dateValue != null && dateValue.contains('-')) {
-        return dateValue.split('-').first;
-      }
-    }
-    return null;
-  }
-
-  HijriDateModel? _extractHijriDate(dynamic hijri) {
-    if (hijri is Map<String, dynamic>) {
-      final day = hijri['day']?.toString();
-      final year = hijri['year']?.toString();
-      String? month;
-      final monthValue = hijri['month'];
-      if (monthValue is Map<String, dynamic>) {
-        month = monthValue['en']?.toString();
-      } else if (monthValue != null) {
-        month = monthValue.toString();
-      }
-      if (day != null &&
-          year != null &&
-          month != null &&
-          day.trim().isNotEmpty &&
-          year.trim().isNotEmpty &&
-          month.trim().isNotEmpty) {
-        return HijriDateModel.fromParts(day: day, month: month, year: year);
-      }
-    }
-    return null;
-  }
+  // Helper methods _extractGregorianDay and _extractHijriDate removed as they are no longer needed
+  // logic is now handled by HijriDateModel.fromMap and simplified loop
 }

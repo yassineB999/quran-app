@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:quranapp/core/error/failures.dart';
-import 'package:quranapp/features/qiblah/domain/repositories/qiblah_repository.dart';
+import 'package:quranapp/core/location/domain/repositories/location_repository.dart';
 
 class CheckLocationPermission {
-  final QiblahRepository repository;
+  final LocationRepository repository;
 
   CheckLocationPermission(this.repository);
 

@@ -14,7 +14,7 @@ class HomeShellPage extends StatelessWidget {
 
   int _locationToIndex(String location) {
     if (location.startsWith('/quran')) return 1;
-    if (location.startsWith('/qiblah')) return 2;
+    if (location.startsWith('/mosques')) return 2;
     if (location.startsWith('/audio')) return 3;
     if (location.startsWith('/more')) return 4;
     return 0;
@@ -29,7 +29,7 @@ class HomeShellPage extends StatelessWidget {
         context.go('/quran');
         break;
       case 2:
-        context.go('/qiblah');
+        context.go('/mosques');
         break;
       case 3:
         context.go('/audio');
@@ -65,9 +65,9 @@ class HomeShellPage extends StatelessWidget {
             label: l10n.tr('quranLabel'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.view_in_ar_outlined),
-            activeIcon: const Icon(Icons.view_in_ar),
-            label: l10n.tr('qiblahLabel'),
+            icon: const Icon(Icons.mosque_outlined),
+            activeIcon: const Icon(Icons.mosque),
+            label: l10n.tr('mosquesLabel'),
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.lightbulb_outline),
@@ -196,6 +196,41 @@ class MorePage extends StatelessWidget {
               l10n.tr('settingsContent'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.06),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ListTile(
+                leading: Icon(
+                  Icons.explore_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                title: Text(
+                  l10n.tr('qiblahLabel'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => context.push('/qiblah'),
+                contentPadding: EdgeInsets.zero,
               ),
             ),
             const SizedBox(height: 16),

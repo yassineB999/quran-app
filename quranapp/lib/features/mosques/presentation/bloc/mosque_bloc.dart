@@ -3,72 +3,74 @@ import 'dart:math' as math;
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:quranapp/features/qiblah/domain/entities/nearby_mosque.dart';
-import 'package:quranapp/features/qiblah/domain/entities/user_location.dart';
-import 'package:quranapp/features/qiblah/domain/usecases/check_location_permission.dart';
-import 'package:quranapp/features/qiblah/domain/usecases/get_current_location.dart';
-import 'package:quranapp/features/qiblah/domain/usecases/get_location_stream.dart';
-import 'package:quranapp/features/qiblah/domain/usecases/get_nearby_mosques.dart';
+import 'package:quranapp/core/location/domain/entities/user_location.dart';
+import 'package:quranapp/core/location/domain/usecases/check_location_permission.dart';
+import 'package:quranapp/core/location/domain/usecases/get_current_location.dart';
+import 'package:quranapp/core/location/domain/usecases/get_location_stream.dart';
+import 'package:quranapp/features/mosques/domain/entities/mosque.dart';
+import 'package:quranapp/features/mosques/domain/usecases/get_nearby_mosques.dart';
 
-abstract class NearbyMosquesEvent extends Equatable {
-  const NearbyMosquesEvent();
+// Events
+abstract class MosqueEvent extends Equatable {
+  const MosqueEvent();
 
   @override
   List<Object?> get props => [];
 }
 
-class LoadNearbyMosquesEvent extends NearbyMosquesEvent {
-  const LoadNearbyMosquesEvent();
+class LoadMosquesEvent extends MosqueEvent {
+  const LoadMosquesEvent();
 }
 
-class NearbyMosquesLocationUpdated extends NearbyMosquesEvent {
+class MosqueLocationUpdated extends MosqueEvent {
   final UserLocation location;
 
-  const NearbyMosquesLocationUpdated(this.location);
+  const MosqueLocationUpdated(this.location);
 
   @override
   List<Object?> get props => [location];
 }
 
-class NearbyMosquesErrorShown extends NearbyMosquesEvent {
-  const NearbyMosquesErrorShown();
+class MosqueErrorShown extends MosqueEvent {
+  const MosqueErrorShown();
 }
 
-class NearbyMosquesLocationFailed extends NearbyMosquesEvent {
+class MosqueLocationFailed extends MosqueEvent {
   final String message;
 
-  const NearbyMosquesLocationFailed(this.message);
+  const MosqueLocationFailed(this.message);
 
   @override
   List<Object?> get props => [message];
 }
 
-abstract class NearbyMosquesState extends Equatable {
-  const NearbyMosquesState();
+// State
+abstract class MosqueState extends Equatable {
+  const MosqueState();
 
   @override
   List<Object?> get props => [];
 }
 
-class NearbyMosquesInitial extends NearbyMosquesState {
-  const NearbyMosquesInitial();
+class MosqueInitial extends MosqueState {
+  const MosqueInitial();
 }
 
-class NearbyMosquesLoading extends NearbyMosquesState {
-  const NearbyMosquesLoading();
+class MosqueLoading extends MosqueState {
+  const MosqueLoading();
 }
 
-class NearbyMosquesPermissionDenied extends NearbyMosquesState {
-  const NearbyMosquesPermissionDenied();
+class MosquePermissionDenied extends MosqueState {
+  const MosquePermissionDenied();
 }
 
-class NearbyMosquesLoaded extends NearbyMosquesState {
+class MosqueLoaded extends MosqueState {
   final UserLocation location;
-  final List<NearbyMosque> mosques;
+  final List<Mosque> mosques;
   final bool isRefreshing;
   final String? errorMessage;
 
-  const NearbyMosquesLoaded({
+  const MosqueLoaded({
     required this.location,
     required this.mosques,
     this.isRefreshing = false,
@@ -79,16 +81,17 @@ class NearbyMosquesLoaded extends NearbyMosquesState {
   List<Object?> get props => [location, mosques, isRefreshing, errorMessage];
 }
 
-class NearbyMosquesError extends NearbyMosquesState {
+class MosqueError extends MosqueState {
   final String message;
 
-  const NearbyMosquesError(this.message);
+  const MosqueError(this.message);
 
   @override
   List<Object?> get props => [message];
 }
 
-class NearbyMosquesBloc extends Bloc<NearbyMosquesEvent, NearbyMosquesState> {
+// Bloc
+class MosqueBloc extends Bloc<MosqueEvent, MosqueState> {
   final CheckLocationPermission checkLocationPermission;
   final GetCurrentLocation getCurrentLocation;
   final GetLocationStream getLocationStream;
@@ -97,39 +100,39 @@ class NearbyMosquesBloc extends Bloc<NearbyMosquesEvent, NearbyMosquesState> {
   UserLocation? _lastLocation;
   bool _isFetching = false;
 
-  NearbyMosquesBloc({
+  MosqueBloc({
     required this.checkLocationPermission,
     required this.getCurrentLocation,
     required this.getLocationStream,
     required this.getNearbyMosques,
-  }) : super(const NearbyMosquesInitial()) {
-    on<LoadNearbyMosquesEvent>(_onLoadNearbyMosques);
-    on<NearbyMosquesLocationUpdated>(_onLocationUpdated);
-    on<NearbyMosquesErrorShown>(_onErrorShown);
-    on<NearbyMosquesLocationFailed>(_onLocationFailed);
+  }) : super(const MosqueInitial()) {
+    on<LoadMosquesEvent>(_onLoadMosques);
+    on<MosqueLocationUpdated>(_onLocationUpdated);
+    on<MosqueErrorShown>(_onErrorShown);
+    on<MosqueLocationFailed>(_onLocationFailed);
   }
 
-  Future<void> _onLoadNearbyMosques(
-    LoadNearbyMosquesEvent event,
-    Emitter<NearbyMosquesState> emit,
+  Future<void> _onLoadMosques(
+    LoadMosquesEvent event,
+    Emitter<MosqueState> emit,
   ) async {
-    if (state is NearbyMosquesLoaded) {
-      final current = state as NearbyMosquesLoaded;
+    if (state is MosqueLoaded) {
+      final current = state as MosqueLoaded;
       emit(
-        NearbyMosquesLoaded(
+        MosqueLoaded(
           location: current.location,
           mosques: current.mosques,
           isRefreshing: true,
         ),
       );
     } else {
-      emit(const NearbyMosquesLoading());
+      emit(const MosqueLoading());
     }
 
     final permissionResult = await checkLocationPermission();
     final permissionGranted = permissionResult.fold((_) => false, (r) => r);
     if (!permissionGranted) {
-      emit(const NearbyMosquesPermissionDenied());
+      emit(const MosquePermissionDenied());
       return;
     }
 
@@ -147,17 +150,17 @@ class NearbyMosquesBloc extends Bloc<NearbyMosquesEvent, NearbyMosquesState> {
   }
 
   Future<void> _onLocationUpdated(
-    NearbyMosquesLocationUpdated event,
-    Emitter<NearbyMosquesState> emit,
+    MosqueLocationUpdated event,
+    Emitter<MosqueState> emit,
   ) async {
     if (_isFetching || !_shouldRefresh(event.location)) {
       return;
     }
     _lastLocation = event.location;
-    if (state is NearbyMosquesLoaded) {
-      final current = state as NearbyMosquesLoaded;
+    if (state is MosqueLoaded) {
+      final current = state as MosqueLoaded;
       emit(
-        NearbyMosquesLoaded(
+        MosqueLoaded(
           location: current.location,
           mosques: current.mosques,
           isRefreshing: true,
@@ -167,14 +170,11 @@ class NearbyMosquesBloc extends Bloc<NearbyMosquesEvent, NearbyMosquesState> {
     await _fetchNearby(event.location, emit);
   }
 
-  void _onErrorShown(
-    NearbyMosquesErrorShown event,
-    Emitter<NearbyMosquesState> emit,
-  ) {
-    if (state is NearbyMosquesLoaded) {
-      final current = state as NearbyMosquesLoaded;
+  void _onErrorShown(MosqueErrorShown event, Emitter<MosqueState> emit) {
+    if (state is MosqueLoaded) {
+      final current = state as MosqueLoaded;
       emit(
-        NearbyMosquesLoaded(
+        MosqueLoaded(
           location: current.location,
           mosques: current.mosques,
           isRefreshing: current.isRefreshing,
@@ -184,32 +184,32 @@ class NearbyMosquesBloc extends Bloc<NearbyMosquesEvent, NearbyMosquesState> {
   }
 
   void _onLocationFailed(
-    NearbyMosquesLocationFailed event,
-    Emitter<NearbyMosquesState> emit,
+    MosqueLocationFailed event,
+    Emitter<MosqueState> emit,
   ) {
     _emitFailure(event.message, emit);
   }
 
   Future<void> _fetchNearby(
     UserLocation location,
-    Emitter<NearbyMosquesState> emit,
+    Emitter<MosqueState> emit,
   ) async {
     _isFetching = true;
-    final mosquesResult = await getNearbyMosques(location);
+    final mosquesResult = await getNearbyMosques(location: location);
     _isFetching = false;
     mosquesResult.fold((failure) => _emitFailure(failure.message, emit), (
       mosques,
     ) {
       _lastLocation = location;
-      emit(NearbyMosquesLoaded(location: location, mosques: mosques));
+      emit(MosqueLoaded(location: location, mosques: mosques));
     });
   }
 
-  void _emitFailure(String message, Emitter<NearbyMosquesState> emit) {
-    if (state is NearbyMosquesLoaded) {
-      final current = state as NearbyMosquesLoaded;
+  void _emitFailure(String message, Emitter<MosqueState> emit) {
+    if (state is MosqueLoaded) {
+      final current = state as MosqueLoaded;
       emit(
-        NearbyMosquesLoaded(
+        MosqueLoaded(
           location: current.location,
           mosques: current.mosques,
           errorMessage: message,
@@ -217,15 +217,15 @@ class NearbyMosquesBloc extends Bloc<NearbyMosquesEvent, NearbyMosquesState> {
       );
       return;
     }
-    emit(NearbyMosquesError(message));
+    emit(MosqueError(message));
   }
 
   void _startLocationUpdates() {
     _locationSubscription?.cancel();
     _locationSubscription = getLocationStream().listen((result) {
       result.fold(
-        (failure) => add(NearbyMosquesLocationFailed(failure.message)),
-        (location) => add(NearbyMosquesLocationUpdated(location)),
+        (failure) => add(MosqueLocationFailed(failure.message)),
+        (location) => add(MosqueLocationUpdated(location)),
       );
     });
   }
