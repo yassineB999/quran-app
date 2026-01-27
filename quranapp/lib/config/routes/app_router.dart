@@ -9,6 +9,9 @@ import 'package:quranapp/features/quran/presentation/pages/quran_reading_page.da
 import 'package:quranapp/features/quran/presentation/pages/mushaf_recitation_page.dart';
 import 'package:quranapp/l10n/app_localizations.dart';
 
+import 'package:quranapp/features/hadith/presentation/pages/hadith_details_page.dart';
+import 'package:quranapp/features/more/presentation/pages/more_page.dart';
+
 class AppRouter {
   final GoRouter router = GoRouter(
     initialLocation: '/home',
@@ -67,6 +70,20 @@ class AppRouter {
       GoRoute(
         path: '/calendar',
         builder: (context, state) => const CalendarPage(),
+      ),
+      GoRoute(
+        path: '/hadith/:editionId',
+        builder: (context, state) {
+          final editionId = state.pathParameters['editionId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+          final arabicId = extra?['arabicId'] as String?;
+          final englishId = extra?['englishId'] as String?;
+          return HadithDetailsPage(
+            editionId: editionId,
+            arabicId: arabicId,
+            englishId: englishId,
+          );
+        },
       ),
     ],
   );

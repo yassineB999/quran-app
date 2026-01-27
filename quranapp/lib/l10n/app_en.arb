@@ -38,7 +38,7 @@
   "compassTab": "Compass",
   "mapViewComingSoon": "Map View Coming Soon",
   "allowLocationAccess": "Allow Location Access",
-  "mosquesLabel": "Mosques",
+  "mosquesLabel": "Closest Mosques",
   "nearbyMosquesEmpty": "No nearby mosques found.",
   "distanceAway": "{distance} km away",
   "mosqueUnnamed": "Unnamed mosque",
@@ -111,5 +111,17 @@
   "wednesdayShort": "Wed",
   "thursdayShort": "Thu",
   "fridayShort": "Fri",
-  "saturdayShort": "Sat"
+  "saturdayShort": "Sat",
+  "hadithCollections": "Hadith Collections",
+  "narratedBy": "Narrated by: {narrator}",
+  "hadith_bukhari": "Sahih al-Bukhari",
+  "hadith_muslim": "Sahih Muslim",
+  "hadith_nasai": "Sunan an-Nasa'i",
+  "hadith_abudawud": "Sunan Abu Dawood",
+  "hadith_tirmidhi": "Jami' at-Tirmidhi",
+  "hadith_ibnmajah": "Sunan Ibn Majah",
+  "hadith_malik": "Muwatta Malik",
+  "hadith_ahmed": "Musnad Ahmad",
+  "hadith_darimi": "Sunan ad-Darimi",
+  "hadith_forty": "40 Hadith Nawawi"
 }

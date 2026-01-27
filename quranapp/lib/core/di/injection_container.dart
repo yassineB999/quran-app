@@ -69,6 +69,12 @@ import 'package:quranapp/features/mosques/domain/repositories/mosque_repository.
 import 'package:quranapp/features/mosques/domain/usecases/get_nearby_mosques.dart';
 import 'package:quranapp/features/mosques/domain/usecases/get_route_to_mosque.dart';
 import 'package:quranapp/features/mosques/presentation/bloc/mosque_bloc.dart';
+import 'package:quranapp/features/hadith/data/datasources/hadith_remote_data_source.dart';
+import 'package:quranapp/features/hadith/data/repositories/hadith_repository_impl.dart';
+import 'package:quranapp/features/hadith/domain/repositories/hadith_repository.dart';
+import 'package:quranapp/features/hadith/domain/usecases/get_hadith_by_edition.dart';
+import 'package:quranapp/features/hadith/domain/usecases/get_hadith_editions.dart';
+import 'package:quranapp/features/hadith/presentation/bloc/hadith_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -217,6 +223,19 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<MosqueRemoteDataSource>(
     () => MosqueRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  //! Features - Hadith
+  sl.registerFactory(
+    () => HadithBloc(getHadithEditions: sl(), getHadithByEdition: sl()),
+  );
+  sl.registerLazySingleton(() => GetHadithEditions(sl()));
+  sl.registerLazySingleton(() => GetHadithByEdition(sl()));
+  sl.registerLazySingleton<HadithRepository>(
+    () => HadithRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<HadithRemoteDataSource>(
+    () => HadithRemoteDataSourceImpl(dioClient: sl()),
   );
 
   //! Core - Location

@@ -50,7 +50,7 @@ class _MosquesViewState extends State<_MosquesView> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.tr('nearbyMosquesLabel'))),
+      appBar: AppBar(title: Text(l10n.tr('mosquesLabel'))),
       body: BlocConsumer<MosqueBloc, MosqueState>(
         listener: (context, state) {
           if (state is MosqueLoaded && state.errorMessage != null) {

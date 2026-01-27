@@ -114,5 +114,17 @@
   "saturdayShort": "سبت",
   "nextMonth": "الشهر القادم",
   "previousMonth": "الشهر السابق",
-  "mosquesLabel": "المساجد"
+  "mosquesLabel": "أقرب المساجد",
+  "hadithCollections": "كتب الحديث",
+  "narratedBy": "راوي الحديث: {narrator}",
+  "hadith_bukhari": "صحيح البخاري",
+  "hadith_muslim": "صحيح مسلم",
+  "hadith_nasai": "سنن النسائي",
+  "hadith_abudawud": "سنن أبي داود",
+  "hadith_tirmidhi": "جامع الترمذي",
+  "hadith_ibnmajah": "سنن ابن ماجه",
+  "hadith_malik": "موطأ مالك",
+  "hadith_ahmed": "مسند أحمد",
+  "hadith_darimi": "سنن الدارمي",
+  "hadith_forty": "الأربعون النووية"
 }

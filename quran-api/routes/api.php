@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\HadithController;
 use App\Http\Controllers\Api\AdhkarController;
 use App\Http\Controllers\Api\HijriCalendarController;
 use App\Http\Controllers\Api\MosqueController;
+use App\Http\Controllers\Api\RecitationController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -29,7 +30,7 @@ Route::controller(PageController::class)->group(function () {
     Route::get('/pages/{page}', 'show');
 });
 
-Route::post('/recitation/check', [\App\Http\Controllers\Api\RecitationController::class, 'check']);
+Route::post('/recitation/check', [RecitationController::class, 'check']);
 
 Route::controller(HadithController::class)->group(function () {
     Route::get('/hadith/editions', 'editions');

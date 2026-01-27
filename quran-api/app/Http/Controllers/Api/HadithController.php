@@ -77,66 +77,69 @@ class HadithController extends Controller
         $number = $request->query('number');
         $section = $request->query('section');
         $refresh = $request->boolean('refresh');
+        $lang = $request->query('lang');
 
         if ($number !== null && $section !== null) {
             return response()->json(['message' => 'Provide either number or section, not both'], 422);
         }
 
-        $type = $number !== null ? 'hadith' : ($section !== null ? 'section' : 'edition');
+        $langs = $this->parseLanguages($lang);
+        $wantsArabic = in_array('ar', $langs, true);
+        $wantsEnglish = in_array('en', $langs, true);
+        if ($wantsArabic && $wantsEnglish) {
+            $arabicEdition = $this->resolveEditionForLanguage($edition, 'ar');
+            $englishEdition = $this->resolveEditionForLanguage($edition, 'en');
 
-        $cacheQuery = HadithCache::where('type', $type)->where('edition', $edition);
-        if ($number !== null) {
-            $cacheQuery->where('hadith_number', (int)$number);
-        }
-        if ($section !== null) {
-            $cacheQuery->where('section_number', (int)$section);
-        }
-        $cache = $cacheQuery->first();
+            $arabicPayload = $this->fetchEditionPayload(
+                $arabicEdition,
+                $number,
+                $section,
+                $refresh
+            );
+            if (!$arabicPayload) {
+                return response()->json(['message' => 'Failed to fetch Arabic hadith data'], 502);
+            }
 
-        if ($cache && !$refresh) {
-            $payload = $cache->payload;
+            $englishPayload = $this->fetchEditionPayload(
+                $englishEdition,
+                $number,
+                $section,
+                $refresh
+            );
+            if (!$englishPayload) {
+                return response()->json(['message' => 'Failed to fetch English hadith data'], 502);
+            }
+
+            $payload = $this->buildMergedPayload($arabicPayload, $englishPayload);
+            $payload['arabic_edition'] = $arabicEdition;
+            $payload['english_edition'] = $englishEdition;
+
             $pagination = null;
-            if (is_array($payload) && isset($payload['hadiths']) && is_array($payload['hadiths']) && array_is_list($payload['hadiths'])) {
+            if (isset($payload['hadiths']) && is_array($payload['hadiths']) && array_is_list($payload['hadiths'])) {
                 $result = $this->paginateList($payload['hadiths'], $request, 50);
                 $payload['hadiths'] = $result['items'];
                 $pagination = $result['pagination'];
             }
+
             return response()->json([
                 'data' => $payload,
                 'pagination' => $pagination,
-                'cached' => true,
+                'cached' => false,
             ]);
         }
 
-        $path = "{$this->baseUrl}/editions/{$edition}";
-        if ($number !== null) {
-            $path .= '/' . (int)$number;
-        } elseif ($section !== null) {
-            $path .= '/sections/' . (int)$section;
-        }
-        $url = "{$path}.json";
-
-        $response = Http::timeout(30)->get($url);
-        if ($response->failed()) {
+        $resolvedEdition = $this->resolveEditionForLanguage(
+            $edition,
+            $wantsArabic ? 'ar' : ($wantsEnglish ? 'en' : null)
+        );
+        $payload = $this->fetchEditionPayload(
+            $resolvedEdition,
+            $number,
+            $section,
+            $refresh
+        );
+        if (!$payload) {
             return response()->json(['message' => 'Failed to fetch hadith data'], 502);
-        }
-
-        $payload = $response->json();
-
-        if ($this->canCachePayload($payload)) {
-            HadithCache::updateOrCreate(
-                [
-                    'type' => $type,
-                    'edition' => $edition,
-                    'hadith_number' => $number !== null ? (int)$number : null,
-                    'section_number' => $section !== null ? (int)$section : null,
-                ],
-                [
-                    'payload' => $payload,
-                    'source_url' => $url,
-                    'fetched_at' => now(),
-                ]
-            );
         }
 
         $pagination = null;
@@ -298,6 +301,60 @@ class HadithController extends Controller
         return [];
     }
 
+    private function fetchEditionPayload(
+        string $edition,
+        ?string $number,
+        ?string $section,
+        bool $refresh
+    ): ?array {
+        $type = $number !== null ? 'hadith' : ($section !== null ? 'section' : 'edition');
+        $cacheQuery = HadithCache::where('type', $type)->where('edition', $edition);
+        if ($number !== null) {
+            $cacheQuery->where('hadith_number', (int)$number);
+        }
+        if ($section !== null) {
+            $cacheQuery->where('section_number', (int)$section);
+        }
+        $cache = $cacheQuery->first();
+
+        if ($cache && !$refresh) {
+            return $cache->payload;
+        }
+
+        $path = "{$this->baseUrl}/editions/{$edition}";
+        if ($number !== null) {
+            $path .= '/' . (int)$number;
+        } elseif ($section !== null) {
+            $path .= '/sections/' . (int)$section;
+        }
+        $url = "{$path}.json";
+
+        $response = Http::timeout(30)->get($url);
+        if ($response->failed()) {
+            return null;
+        }
+
+        $payload = $response->json();
+
+        if ($this->canCachePayload($payload)) {
+            HadithCache::updateOrCreate(
+                [
+                    'type' => $type,
+                    'edition' => $edition,
+                    'hadith_number' => $number !== null ? (int)$number : null,
+                    'section_number' => $section !== null ? (int)$section : null,
+                ],
+                [
+                    'payload' => $payload,
+                    'source_url' => $url,
+                    'fetched_at' => now(),
+                ]
+            );
+        }
+
+        return $payload;
+    }
+
     private function hasText($item): bool
     {
         if (!is_array($item)) {
@@ -348,6 +405,120 @@ class HadithController extends Controller
             }
         }
 
+        return null;
+    }
+
+    private function parseLanguages(?string $lang): array
+    {
+        if (!$lang) {
+            return [];
+        }
+        $parts = array_map('trim', explode(',', strtolower($lang)));
+        $normalized = [];
+        foreach ($parts as $part) {
+            if ($part === 'arabic') {
+                $part = 'ar';
+            }
+            if ($part === 'english') {
+                $part = 'en';
+            }
+            if ($part !== '') {
+                $normalized[] = $part;
+            }
+        }
+        return array_values(array_unique($normalized));
+    }
+
+    private function resolveEditionForLanguage(string $edition, ?string $lang): string
+    {
+        $edition = strtolower(trim($edition));
+        $edition = str_replace([' ', '_'], '-', $edition);
+        if ($edition === '') {
+            return $edition;
+        }
+        if (str_starts_with($edition, 'ara-') ||
+            str_starts_with($edition, 'eng-') ||
+            str_starts_with($edition, 'en-')) {
+            return $edition;
+        }
+
+        $aliases = [
+            'bukhari' => 'bukhari',
+            'muslim' => 'muslim',
+            'nasai' => 'nasai',
+            'abudawud' => 'abudawud',
+            'abu-dawud' => 'abudawud',
+            'tirmidhi' => 'tirmidhi',
+            'ibnmajah' => 'ibnmajah',
+            'ibn-majah' => 'ibnmajah',
+            'malik' => 'malik',
+            'ahmed' => 'ahmed',
+            'darimi' => 'darimi',
+            'forty' => 'forty',
+        ];
+
+        $base = $aliases[$edition] ?? $edition;
+        if ($lang === 'ar') {
+            return 'ara-' . $base;
+        }
+        if ($lang === 'en') {
+            return 'eng-' . $base;
+        }
+        return $base;
+    }
+
+    private function buildMergedPayload(array $arabicPayload, array $englishPayload): array
+    {
+        $arabicHadiths = $this->extractHadiths($arabicPayload);
+        $englishHadiths = $this->extractHadiths($englishPayload);
+        $englishMap = [];
+        foreach ($englishHadiths as $item) {
+            $number = $this->extractHadithNumber($item);
+            if ($number !== null) {
+                $englishMap[$number] = $item;
+            }
+        }
+
+        $merged = [];
+        foreach ($arabicHadiths as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $number = $this->extractHadithNumber($item);
+            $englishItem = $number !== null ? ($englishMap[$number] ?? null) : null;
+            $englishText = $englishItem
+                ? $this->extractText($englishItem, ['translation', 'text', 'hadith', 'body'])
+                : null;
+            if ($englishText) {
+                $item['englishText'] = $englishText;
+            }
+            $merged[] = $item;
+        }
+
+        $payload = [];
+        if (isset($arabicPayload['metadata'])) {
+            $payload['metadata'] = $arabicPayload['metadata'];
+        }
+        if (isset($arabicPayload['name'])) {
+            $payload['name'] = $arabicPayload['name'];
+        } elseif (isset($arabicPayload['book'])) {
+            $payload['book'] = $arabicPayload['book'];
+        }
+        $payload['hadiths'] = $merged;
+        return $payload;
+    }
+
+    private function extractHadithNumber($item): ?int
+    {
+        if (!is_array($item)) {
+            return null;
+        }
+        if (isset($item['hadithnumber'])) {
+            return (int)$item['hadithnumber'];
+        }
+        if (isset($item['number'])) {
+            return (int)$item['number'];
+        }
         return null;
     }
 
