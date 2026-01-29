@@ -17,6 +17,7 @@ class HijriCalendarDay extends Equatable {
   final String hijriMonthEn;
   final String hijriMonthAr;
   final int hijriYear;
+  final List<String> holidays;
 
   const HijriCalendarDay({
     required this.gregorianDate,
@@ -32,7 +33,17 @@ class HijriCalendarDay extends Equatable {
     required this.hijriMonthEn,
     required this.hijriMonthAr,
     required this.hijriYear,
+    this.holidays = const [],
   });
+
+  bool get isRamadan => hijriMonth == 9;
+
+  bool get isEidAlFitr => hijriMonth == 10 && (hijriDay >= 1 && hijriDay <= 3);
+
+  bool get isEidAlAdha =>
+      hijriMonth == 12 && (hijriDay >= 10 && hijriDay <= 13);
+
+  bool get isHolyDay => isRamadan || isEidAlFitr || isEidAlAdha;
 
   @override
   List<Object?> get props => [
@@ -49,6 +60,7 @@ class HijriCalendarDay extends Equatable {
     hijriMonthEn,
     hijriMonthAr,
     hijriYear,
+    holidays,
   ];
 }
 

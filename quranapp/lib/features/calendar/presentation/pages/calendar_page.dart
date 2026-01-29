@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quranapp/config/theme/app_theme.dart';
 import 'package:quranapp/core/di/injection_container.dart';
+import 'package:quranapp/features/calendar/domain/entities/hijri_calendar_day.dart';
 import 'package:quranapp/features/calendar/presentation/bloc/calendar_bloc.dart';
 import 'package:quranapp/features/calendar/presentation/bloc/calendar_event.dart';
 import 'package:quranapp/features/calendar/presentation/bloc/calendar_state.dart';
@@ -34,6 +35,13 @@ class _CalendarView extends StatefulWidget {
 
 class _CalendarViewState extends State<_CalendarView> {
   bool _isExpanded = true;
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = DateTime.now();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +96,7 @@ class _CalendarViewState extends State<_CalendarView> {
         ],
       ),
       body: Container(
+        constraints: const BoxConstraints.expand(),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -109,6 +118,11 @@ class _CalendarViewState extends State<_CalendarView> {
               }
 
               if (state is CalendarLoaded) {
+                // Update selected date if not set (first load)
+                if (_selectedDate == null) {
+                  _selectedDate = state.today;
+                }
+
                 return _buildCalendarContent(context, state, isDark, l10n);
               }
 
@@ -126,14 +140,10 @@ class _CalendarViewState extends State<_CalendarView> {
     bool isDark,
     AppLocalizations l10n,
   ) {
-    // If we're loading but have no current data yet (e.g. init), show loader
     if (state.currentCalendarMonth == null && !state.isLoading) {
-      // Should theoretically not happen if logic inBloc is right, but safe guard
       return const Center(child: CircularProgressIndicator());
     }
 
-    // If strict null check fails but we are loading, we might show loader.
-    // But cachedMonths logic should prevent currentCalendarMonth from being null if we had it.
     final currentMonth = state.currentCalendarMonth;
     if (currentMonth == null) {
       return const Center(child: CircularProgressIndicator());
@@ -169,63 +179,129 @@ class _CalendarViewState extends State<_CalendarView> {
                 _isExpanded = val;
               });
             },
+            onDaySelected: (date) {
+              setState(() {
+                _selectedDate = date;
+              });
+            },
           ),
           const SizedBox(height: 24),
-          _buildTodayInfo(context, state, isDark, l10n),
+          _buildSelectedDayInfo(context, state, isDark, l10n),
         ],
       ),
     );
   }
 
-  Widget _buildTodayInfo(
+  Widget _buildSelectedDayInfo(
     BuildContext context,
     CalendarLoaded state,
     bool isDark,
     AppLocalizations l10n,
   ) {
-    if (state.currentCalendarMonth == null) return const SizedBox.shrink();
+    if (state.currentCalendarMonth == null || _selectedDate == null) {
+      return const SizedBox.shrink();
+    }
 
-    // Find today's info
-    final today = state.today;
-    final todayData = state.currentCalendarMonth!.days.where(
-      (day) =>
-          day.gregorianDay == today.day &&
-          day.gregorianMonth == today.month &&
-          day.gregorianYear == today.year,
-    );
+    HijriCalendarDay? dayInfo;
 
-    if (todayData.isEmpty) return const SizedBox.shrink();
+    HijriCalendarDay? findInMonth(HijriCalendarMonth month) {
+      try {
+        return month.days.firstWhere(
+          (d) =>
+              d.gregorianDay == _selectedDate!.day &&
+              d.gregorianMonth == _selectedDate!.month &&
+              d.gregorianYear == _selectedDate!.year,
+        );
+      } catch (e) {
+        return null;
+      }
+    }
 
-    final todayInfo = todayData.first;
+    if (state.currentCalendarMonth != null) {
+      dayInfo = findInMonth(state.currentCalendarMonth!);
+    }
+
+    if (dayInfo == null) {
+      for (final month in state.cachedMonths.values) {
+        dayInfo = findInMonth(month);
+        if (dayInfo != null) break;
+      }
+    }
+
+    if (dayInfo == null) return const SizedBox.shrink();
+
+    final events = <String>[];
+    if (dayInfo.isEidAlFitr) {
+      final name = l10n.tr('eidAlFitr');
+      events.add(name == 'eidAlFitr' ? 'Eid al-Fitr' : name);
+    }
+    if (dayInfo.isEidAlAdha) {
+      final name = l10n.tr('eidAlAdha');
+      events.add(name == 'eidAlAdha' ? 'Eid al-Adha' : name);
+    }
+    if (dayInfo.isRamadan) {
+      final name = l10n.tr('ramadan');
+      events.add(name == 'ramadan' ? 'Ramadan' : name);
+    }
+
+    if (dayInfo.holidays.isNotEmpty) {
+      for (var h in dayInfo.holidays) {
+        if (!events.contains(h)) events.add(h);
+      }
+    }
+
+    final isEventDay = events.isNotEmpty;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.white.withValues(alpha: 0.8),
+            ? (isEventDay
+                  ? const Color(0xFF2C2C1E)
+                  : Colors.white.withValues(alpha: 0.05))
+            : (isEventDay
+                  ? const Color(0xFFFFF9C4).withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.8)),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.03),
+          color: isEventDay
+              ? const Color(0xFFFFB300)
+              : (isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.03)),
+          width: isEventDay ? 1.5 : 1,
         ),
       ),
       child: Column(
         children: [
-          Text(
-            l10n.tr('todayLabel'),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.primaryTeal,
-              letterSpacing: 1.0,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isEventDay) ...[
+                const Icon(
+                  Icons.star_rounded,
+                  color: Color(0xFFFFB300),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                isEventDay ? l10n.tr('specialEvent') : l10n.tr('selectedDate'),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isEventDay
+                      ? const Color(0xFFFFB300)
+                      : AppTheme.primaryTeal,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
-            '${todayInfo.hijriWeekdayAr} - ${todayInfo.hijriDay} ${todayInfo.hijriMonthAr} ${todayInfo.hijriYear}',
+            '${dayInfo.hijriWeekdayAr} - ${dayInfo.hijriDay} ${dayInfo.hijriMonthAr} ${dayInfo.hijriYear}',
             style: TextStyle(
               fontFamily: 'Amiri',
               fontSize: 20,
@@ -236,12 +312,34 @@ class _CalendarViewState extends State<_CalendarView> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${todayInfo.gregorianWeekday}, ${todayInfo.gregorianMonthName} ${todayInfo.gregorianDay}, ${todayInfo.gregorianYear}',
+            '${dayInfo.gregorianWeekday}, ${dayInfo.gregorianMonthName} ${dayInfo.gregorianDay}, ${dayInfo.gregorianYear}',
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.white60 : Colors.black54,
             ),
           ),
+          if (isEventDay) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFB300).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFFFFB300).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Text(
+                events.join(" • "),
+                style: const TextStyle(
+                  color: Color(0xFFFFB300),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ],
       ),
     );

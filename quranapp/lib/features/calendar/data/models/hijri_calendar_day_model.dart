@@ -16,6 +16,7 @@ class HijriCalendarDayModel extends HijriCalendarDay {
     required super.hijriMonthEn,
     required super.hijriMonthAr,
     required super.hijriYear,
+    super.holidays,
   });
 
   /// Creates a model from API JSON response.
@@ -51,6 +52,11 @@ class HijriCalendarDayModel extends HijriCalendarDay {
       hijriMonthEn: (hijriMonthData['en'] ?? '').toString(),
       hijriMonthAr: (hijriMonthData['ar'] ?? '').toString(),
       hijriYear: int.tryParse(hijri['year']?.toString() ?? '') ?? 0,
+      holidays:
+          (hijri['holidays'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
     );
   }
 }

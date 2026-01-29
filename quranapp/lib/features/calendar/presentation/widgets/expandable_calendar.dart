@@ -12,6 +12,7 @@ class ExpandableCalendar extends StatefulWidget {
   final bool isDark;
   final bool isExpanded;
   final ValueChanged<bool> onExpansionChanged;
+  final ValueChanged<DateTime> onDaySelected;
 
   const ExpandableCalendar({
     super.key,
@@ -19,6 +20,7 @@ class ExpandableCalendar extends StatefulWidget {
     required this.isDark,
     required this.isExpanded,
     required this.onExpansionChanged,
+    required this.onDaySelected,
   });
 
   @override
@@ -152,6 +154,7 @@ class _ExpandableCalendarState extends State<ExpandableCalendar> {
                           child: CalendarGrid(
                             days: cachedMonth.days,
                             isDark: widget.isDark,
+                            onDaySelected: widget.onDaySelected,
                           ),
                         );
                       } else {
@@ -181,6 +184,7 @@ class _ExpandableCalendarState extends State<ExpandableCalendar> {
                             today: widget.state.today,
                             focusedDate: targetDate,
                             isDark: widget.isDark,
+                            onDaySelected: widget.onDaySelected,
                           ),
                         );
                       }

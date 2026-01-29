@@ -9,6 +9,7 @@ class CalendarWeekRow extends StatelessWidget {
   final DateTime today;
   final bool isDark;
   final DateTime focusedDate;
+  final ValueChanged<DateTime> onDaySelected;
 
   const CalendarWeekRow({
     super.key,
@@ -16,6 +17,7 @@ class CalendarWeekRow extends StatelessWidget {
     required this.today,
     required this.isDark,
     required this.focusedDate,
+    required this.onDaySelected,
   });
 
   @override
@@ -76,10 +78,21 @@ class CalendarWeekRow extends StatelessWidget {
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(4.0),
-                child: CalendarDayCell(
-                  day: day,
-                  isToday: isToday,
-                  isDark: isDark,
+                child: InkWell(
+                  onTap: () {
+                    final date = DateTime(
+                      day.gregorianYear,
+                      day.gregorianMonth,
+                      day.gregorianDay,
+                    );
+                    onDaySelected(date);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: CalendarDayCell(
+                    day: day,
+                    isToday: isToday,
+                    isDark: isDark,
+                  ),
                 ),
               ),
             );
@@ -103,12 +116,6 @@ class CalendarWeekRow extends StatelessWidget {
     final weekdayIndex = _getWeekdayIndex(dayObj.gregorianWeekday);
 
     // 3. Find the start of the week (Sunday)
-    // We are looking for the slice of `days` that corresponds to this week.
-    // However, `days` list might be missing padding for the first week of the month.
-    // A robust way:
-    // Construct a list of 7 items.
-    // The `dayObj` should be at `weekdayIndex`.
-
     final week = List<HijriCalendarDay?>.filled(7, null);
 
     // Fill backwards
@@ -127,8 +134,6 @@ class CalendarWeekRow extends StatelessWidget {
     // Fill forwards
     for (int i = weekdayIndex + 1; i < 7; i++) {
       final targetDay = date.day + (i - weekdayIndex);
-      // Logic is simplified; strictly speaking we should check month boundaries properly
-      // but assuming we are within the loaded month for now.
       try {
         final d = days.cast<HijriCalendarDay>().firstWhere(
           (element) => element.gregorianDay == targetDay,

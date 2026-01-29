@@ -14,4 +14,10 @@ abstract class CalendarRepository {
     required int month,
     bool refresh = false,
   });
+
+  /// Fetches the Hijri calendar for a specific Gregorian year.
+  Future<Either<Failure, List<HijriCalendarMonth>>> getCalendarYear({
+    required int year,
+    bool refresh = false,
+  });
 }

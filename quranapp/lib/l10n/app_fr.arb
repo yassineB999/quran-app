@@ -114,5 +114,17 @@
   "saturdayShort": "Sam",
   "nextMonth": "Mois suivant",
   "previousMonth": "Mois précédent",
-  "mosquesLabel": "Mosquées les plus proches"
+  "mosquesLabel": "Mosquées les plus proches",
+  "hadithCollections": "Hadith",
+  "narratedBy": "Rapporté par: {narrator}",
+  "adhkarLabel": "Adhkar",
+  "adhkarCategories": "Adhkar Quotidien",
+  "morningAdhkar": "Adhkar du Matin",
+  "eveningAdhkar": "Adhkar du Soir",
+  "bedtimeAdhkar": "Adhkar du Coucher",
+  "morningAdhkarSubtitle": "Commencez votre journée en vous souvenant",
+  "eveningAdhkarSubtitle": "Terminez votre journée en paix",
+  "bedtimeAdhkarSubtitle": "Dormez avec tranquillité",
+  "repeatCount": "Répéter {count} fois",
+  "adhkarUnavailable": "Adhkar non disponible."
 }

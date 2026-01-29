@@ -7,8 +7,14 @@ import 'package:quranapp/l10n/app_localizations.dart';
 class CalendarGrid extends StatelessWidget {
   final List<HijriCalendarDay> days;
   final bool isDark;
+  final ValueChanged<DateTime> onDaySelected;
 
-  const CalendarGrid({super.key, required this.days, required this.isDark});
+  const CalendarGrid({
+    super.key,
+    required this.days,
+    required this.isDark,
+    required this.onDaySelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +87,18 @@ class CalendarGrid extends StatelessWidget {
       gridItems.add(
         Padding(
           padding: const EdgeInsets.all(4.0),
-          child: CalendarDayCell(day: day, isToday: isToday, isDark: isDark),
+          child: InkWell(
+            onTap: () {
+              final date = DateTime(
+                day.gregorianYear,
+                day.gregorianMonth,
+                day.gregorianDay,
+              );
+              onDaySelected(date);
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: CalendarDayCell(day: day, isToday: isToday, isDark: isDark),
+          ),
         ),
       );
     }

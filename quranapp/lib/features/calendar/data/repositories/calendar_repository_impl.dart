@@ -41,4 +41,28 @@ class CalendarRepositoryImpl implements CalendarRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<HijriCalendarMonth>>> getCalendarYear({
+    required int year,
+    bool refresh = false,
+  }) async {
+    if (!await networkInfo.isConnected) {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+
+    try {
+      final result = await remoteDataSource.getCalendarYear(
+        year: year,
+        refresh: refresh,
+      );
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

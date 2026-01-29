@@ -22,6 +22,7 @@ class AdhkarController extends Controller
     private array $englishTitles = [
         'morning' => 'Morning Adhkar',
         'evening' => 'Evening Adhkar',
+        'bedtime' => 'Bedtime Adhkar',
     ];
 
     public function show(string $category, Request $request)
@@ -126,12 +127,19 @@ class AdhkarController extends Controller
 
     private function filterEnglishItems(array $items, string $category): array
     {
-        $type = $category === 'morning' ? 1 : 2;
+        $type = match ($category) {
+            'morning' => 1,
+            'evening' => 2,
+            'bedtime' => 3,
+            default => 0,
+        };
+
         return array_values(array_filter($items, function ($item) use ($type) {
             if (!is_array($item)) {
                 return false;
             }
             $itemType = $item['type'] ?? 0;
+            // Type 0 is shared (e.g. Ayat Al-Kursi, 3 Quls)
             return $itemType === 0 || $itemType === $type;
         }));
     }

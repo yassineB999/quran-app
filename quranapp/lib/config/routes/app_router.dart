@@ -11,6 +11,8 @@ import 'package:quranapp/l10n/app_localizations.dart';
 
 import 'package:quranapp/features/hadith/presentation/pages/hadith_details_page.dart';
 import 'package:quranapp/features/more/presentation/pages/more_page.dart';
+import 'package:quranapp/features/adhkar/presentation/pages/adhkar_categories_page.dart';
+import 'package:quranapp/features/adhkar/presentation/pages/adhkar_list_page.dart';
 
 class AppRouter {
   final GoRouter router = GoRouter(
@@ -83,6 +85,17 @@ class AppRouter {
             arabicId: arabicId,
             englishId: englishId,
           );
+        },
+      ),
+      GoRoute(
+        path: '/adhkar',
+        builder: (context, state) => const AdhkarCategoriesPage(),
+      ),
+      GoRoute(
+        path: '/adhkar/:category',
+        builder: (context, state) {
+          final category = state.pathParameters['category']!;
+          return AdhkarListPage(category: category);
         },
       ),
     ],

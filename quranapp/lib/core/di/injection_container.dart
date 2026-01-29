@@ -43,6 +43,7 @@ import 'package:quranapp/features/calendar/data/datasources/calendar_remote_data
 import 'package:quranapp/features/calendar/data/repositories/calendar_repository_impl.dart';
 import 'package:quranapp/features/calendar/domain/repositories/calendar_repository.dart';
 import 'package:quranapp/features/calendar/domain/usecases/get_hijri_calendar_month.dart';
+import 'package:quranapp/features/calendar/domain/usecases/get_hijri_calendar_year.dart';
 import 'package:quranapp/features/calendar/presentation/bloc/calendar_bloc.dart';
 
 // Qiblah feature imports
@@ -75,6 +76,13 @@ import 'package:quranapp/features/hadith/domain/repositories/hadith_repository.d
 import 'package:quranapp/features/hadith/domain/usecases/get_hadith_by_edition.dart';
 import 'package:quranapp/features/hadith/domain/usecases/get_hadith_editions.dart';
 import 'package:quranapp/features/hadith/presentation/bloc/hadith_bloc.dart';
+
+// Adhkar feature imports
+import 'package:quranapp/features/adhkar/data/datasources/adhkar_remote_data_source.dart';
+import 'package:quranapp/features/adhkar/data/repositories/adhkar_repository_impl.dart';
+import 'package:quranapp/features/adhkar/domain/repositories/adhkar_repository.dart';
+import 'package:quranapp/features/adhkar/domain/usecases/get_adhkar_by_category.dart';
+import 'package:quranapp/features/adhkar/presentation/bloc/adhkar_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -180,8 +188,11 @@ Future<void> init() async {
   );
 
   //! Features - Calendar
-  sl.registerFactory(() => CalendarBloc(getHijriCalendarMonth: sl()));
+  sl.registerFactory(
+    () => CalendarBloc(getHijriCalendarMonth: sl(), getHijriCalendarYear: sl()),
+  );
   sl.registerLazySingleton(() => GetHijriCalendarMonth(sl()));
+  sl.registerLazySingleton(() => GetHijriCalendarYear(sl()));
   sl.registerLazySingleton<CalendarRepository>(
     () => CalendarRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
   );
@@ -236,6 +247,16 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<HadithRemoteDataSource>(
     () => HadithRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  //! Features - Adhkar
+  sl.registerFactory(() => AdhkarBloc(getAdhkarByCategory: sl()));
+  sl.registerLazySingleton(() => GetAdhkarByCategory(sl()));
+  sl.registerLazySingleton<AdhkarRepository>(
+    () => AdhkarRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<AdhkarRemoteDataSource>(
+    () => AdhkarRemoteDataSourceImpl(dioClient: sl()),
   );
 
   //! Core - Location

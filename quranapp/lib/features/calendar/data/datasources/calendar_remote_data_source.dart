@@ -10,6 +10,12 @@ abstract class CalendarRemoteDataSource {
     required int month,
     bool refresh = false,
   });
+
+  /// Fetches calendar data for a specific Gregorian year.
+  Future<List<HijriCalendarMonthModel>> getCalendarYear({
+    required int year,
+    bool refresh = false,
+  });
 }
 
 /// Implementation of CalendarRemoteDataSource using DioClient.
@@ -30,5 +36,30 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
     );
 
     return HijriCalendarMonthModel.fromJson(response.data!);
+  }
+
+  @override
+  Future<List<HijriCalendarMonthModel>> getCalendarYear({
+    required int year,
+    bool refresh = false,
+  }) async {
+    // Note: The API is paginated by default (per_page=6), but we want ALL months (12).
+    // So we request per_page=12.
+    final response = await dioClient.get<Map<String, dynamic>>(
+      ApiEndpoints.hijriCalendarYear(year),
+      queryParameters: {'per_page': 12, if (refresh) 'refresh': 'true'},
+    );
+
+    final data = response.data!;
+    final monthsList = data['months'] as List<dynamic>? ?? [];
+
+    return monthsList.map((monthJson) {
+      // The year API returns items like { "month": 1, "data": {...}, "cached": ... }
+      // Our HijriCalendarMonthModel.fromJson expects top-level "year" and "month" fields.
+      // "month" is present. "year" might be missing in the item, so we inject it.
+      final jsonWithYear = Map<String, dynamic>.from(monthJson as Map);
+      jsonWithYear['year'] = year; // Ensure year is present for the model
+      return HijriCalendarMonthModel.fromJson(jsonWithYear);
+    }).toList();
   }
 }

@@ -1,19 +1,23 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quranapp/features/calendar/domain/entities/hijri_calendar_day.dart';
 import 'package:quranapp/features/calendar/domain/usecases/get_hijri_calendar_month.dart';
+import 'package:quranapp/features/calendar/domain/usecases/get_hijri_calendar_year.dart';
 import 'package:quranapp/features/calendar/presentation/bloc/calendar_event.dart';
 import 'package:quranapp/features/calendar/presentation/bloc/calendar_state.dart';
 
 class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
   final GetHijriCalendarMonth getHijriCalendarMonth;
+  final GetHijriCalendarYear getHijriCalendarYear;
 
   int _currentYear;
   int _currentMonth;
 
-  CalendarBloc({required this.getHijriCalendarMonth})
-    : _currentYear = DateTime.now().year,
-      _currentMonth = DateTime.now().month,
-      super(const CalendarInitial()) {
+  CalendarBloc({
+    required this.getHijriCalendarMonth,
+    required this.getHijriCalendarYear,
+  }) : _currentYear = DateTime.now().year,
+       _currentMonth = DateTime.now().month,
+       super(const CalendarInitial()) {
     on<LoadCalendarMonth>(_onLoadCalendarMonth);
     on<PreviousMonth>(_onPreviousMonth);
     on<NextMonth>(_onNextMonth);
@@ -35,8 +39,7 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
 
     final cacheKey = '${event.year}-${event.month}';
 
-    // If we have data, emit it immediately (or keep showing it if already there)
-    // We also want to indicate loading if refresh is true or data missing
+    // 1. Check Cache
     if (currentCache.containsKey(cacheKey) && !event.refresh) {
       emit(
         CalendarLoaded(
@@ -50,8 +53,7 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
       return;
     }
 
-    // Emit loading state but KEEP previous data if available (Loaded state with isLoading=true)
-    // If it was Initial or Error, we might need a dedicated Loading state or just empty Loaded
+    // 2. Emit Loading
     if (currentState is CalendarLoaded) {
       emit(
         CalendarLoaded(
@@ -66,18 +68,23 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
       emit(CalendarLoading(year: event.year, month: event.month));
     }
 
-    final result = await getHijriCalendarMonth(
-      CalendarMonthParams(
-        year: event.year,
-        month: event.month,
-        refresh: event.refresh,
-      ),
+    // 3. Optimization: Fetch Entire Year if cache miss
+    // If the user is requesting specific month and it's missing,
+    // we fetch the WHOLE year to populate cache for adjacent months.
+
+    // Check if we should fetch year or just month.
+    // Usually fetching year is better unless we explicitly want only one month refresh.
+    // Let's assume year fetch is standard for navigation.
+
+    final result = await getHijriCalendarYear(
+      CalendarYearParams(year: event.year, refresh: event.refresh),
     );
 
     result.fold(
       (failure) {
-        // If we had data, maybe revert to it or show error?
-        // For now, standard error behavior if we fail distinct load
+        // Fallback or Error
+        // If year fetch fails, we could try single month fetch?
+        // Or just show error. Showing error is safer.
         emit(
           CalendarError(
             message: failure.message,
@@ -86,8 +93,13 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
           ),
         );
       },
-      (calendarMonth) {
-        currentCache[cacheKey] = calendarMonth;
+      (monthsList) {
+        // Populate cache with ALL returned months
+        for (final monthData in monthsList) {
+          final key = '${monthData.gregorianYear}-${monthData.gregorianMonth}';
+          currentCache[key] = monthData;
+        }
+
         emit(
           CalendarLoaded(
             cachedMonths: currentCache,
