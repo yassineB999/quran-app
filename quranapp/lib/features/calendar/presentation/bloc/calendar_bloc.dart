@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:quranapp/core/network/connectivity_service.dart';
 import 'package:quranapp/features/calendar/domain/entities/hijri_calendar_day.dart';
 import 'package:quranapp/features/calendar/domain/usecases/get_hijri_calendar_month.dart';
 import 'package:quranapp/features/calendar/domain/usecases/get_hijri_calendar_year.dart';
@@ -11,10 +14,13 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
 
   int _currentYear;
   int _currentMonth;
+  final ConnectivityService connectivityService;
+  StreamSubscription? _connectivitySubscription;
 
   CalendarBloc({
     required this.getHijriCalendarMonth,
     required this.getHijriCalendarYear,
+    required this.connectivityService,
   }) : _currentYear = DateTime.now().year,
        _currentMonth = DateTime.now().month,
        super(const CalendarInitial()) {
@@ -22,6 +28,20 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
     on<PreviousMonth>(_onPreviousMonth);
     on<NextMonth>(_onNextMonth);
     on<GoToToday>(_onGoToToday);
+    _setupAutoRetry();
+  }
+
+  void _setupAutoRetry() {
+    _connectivitySubscription = connectivityService.stateStream.listen((state) {
+      if (state is ConnectivityOnline) {
+        if (this.state is CalendarError) {
+          final errorState = this.state as CalendarError;
+          add(
+            LoadCalendarMonth(year: errorState.year, month: errorState.month),
+          );
+        }
+      }
+    });
   }
 
   Future<void> _onLoadCalendarMonth(
@@ -149,5 +169,11 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
   ) async {
     final now = DateTime.now();
     add(LoadCalendarMonth(year: now.year, month: now.month));
+  }
+
+  @override
+  Future<void> close() {
+    _connectivitySubscription?.cancel();
+    return super.close();
   }
 }

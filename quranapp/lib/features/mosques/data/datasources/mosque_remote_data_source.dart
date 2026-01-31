@@ -1,7 +1,9 @@
 import 'package:quranapp/core/constants/app_constants.dart';
+import 'package:dio/dio.dart';
 import 'package:quranapp/core/error/exceptions.dart';
 import 'package:quranapp/core/network/api_endpoints.dart';
 import 'package:quranapp/core/network/dio_client.dart';
+import 'package:quranapp/core/network/timeout_config.dart';
 import 'package:quranapp/features/mosques/data/models/mosque_model.dart';
 import 'package:quranapp/features/mosques/data/models/route_point_model.dart';
 
@@ -32,6 +34,7 @@ class MosqueRemoteDataSourceImpl implements MosqueRemoteDataSource {
     final response = await dioClient.get(
       ApiEndpoints.nearbyMosques,
       queryParameters: {'lat': latitude, 'lng': longitude},
+      options: Options(receiveTimeout: TimeoutConfig.fast),
     );
 
     if (response.statusCode == 200) {

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:quranapp/core/network/connectivity_service.dart';
 import 'package:quranapp/core/usecases/usecase.dart';
 import 'package:quranapp/features/hadith/domain/entities/hadith.dart';
 import 'package:quranapp/features/hadith/domain/entities/hadith_book.dart';
@@ -11,27 +14,48 @@ import 'package:quranapp/features/hadith/presentation/bloc/hadith_state.dart';
 class HadithBloc extends Bloc<HadithEvent, HadithState> {
   final GetHadithEditions getHadithEditions;
   final GetHadithByEdition getHadithByEdition;
+  final ConnectivityService connectivityService;
+  StreamSubscription? _connectivitySubscription;
+  HadithEvent? _lastEvent;
 
   HadithBloc({
     required this.getHadithEditions,
     required this.getHadithByEdition,
+    required this.connectivityService,
   }) : super(HadithInitial()) {
     on<GetHadithEditionsEvent>(_onGetEditions);
     on<GetHadithsByEditionEvent>(_onGetHadithsByEdition);
     on<GetHadithsByBookEvent>(_onGetHadithsByBook);
+    _setupAutoRetry();
+  }
+
+  void _setupAutoRetry() {
+    _connectivitySubscription = connectivityService.stateStream.listen((state) {
+      if (state is ConnectivityOnline) {
+        if (this.state is HadithError && _lastEvent != null) {
+          add(_lastEvent!);
+        } else if (this.state is HadithError && state is! HadithBooksLoaded) {
+          // If we don't have a last event but have an error, maybe try reloading editions?
+          // This assumes the initial state/error state implies we wanted editions if _lastEvent is null.
+          // However, let's stick to _lastEvent for now.
+          // If _lastEvent is null, it might mean we failed initial load which should be GetHadithEditionsEvent.
+          add(GetHadithEditionsEvent());
+        }
+      }
+    });
   }
 
   Future<void> _onGetEditions(
     GetHadithEditionsEvent event,
     Emitter<HadithState> emit,
   ) async {
+    _lastEvent = event;
     emit(HadithLoading());
     final result = await getHadithEditions(NoParams());
     result.fold((failure) => emit(HadithError(failure.message)), (editions) {
       // Group by collection
       final Map<String, List<HadithEdition>> grouped = {};
       for (var edition in editions) {
-        // Normalize collection name if needed, assuming 'collection' field is consistent
         final key = edition.collection;
         if (!grouped.containsKey(key)) {
           grouped[key] = [];
@@ -48,13 +72,11 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
             HadithEdition? english;
 
             // Simple heuristic for language - checks name or language field
-            // Improve this loop to be more robust
             for (var e in list) {
               final lang = e.language.toLowerCase();
               if (lang.contains('arabic') ||
                   lang.contains('ara') ||
                   e.id.startsWith('ara-')) {
-                // Prefer the one without '1' if multiple (e.g. ara-bukhari vs ara-bukhari1)
                 if (arabic == null || e.id.length < arabic.id.length) {
                   arabic = e;
                 }
@@ -83,6 +105,7 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
     GetHadithsByBookEvent event,
     Emitter<HadithState> emit,
   ) async {
+    _lastEvent = event;
     emit(HadithLoading());
 
     // Fetch both asynchronously
@@ -106,13 +129,7 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
       final result = await getHadithByEdition(
         GetHadithByEditionParams(editionId: event.englishEditionId!),
       );
-      result.fold(
-        // If english fails but arabic succeeded, we might still want to show arabic?
-        // For now let's just log or ignore if secondary fails, or error if primary fails.
-        // Let's assume we want at least one.
-        (l) => errorMessage ??= l.message,
-        (r) => englishHadiths = r,
-      );
+      result.fold((l) => errorMessage ??= l.message, (r) => englishHadiths = r);
     }
 
     if (arabicHadiths.isEmpty && englishHadiths.isEmpty) {
@@ -121,8 +138,6 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
     }
 
     // Merge logic
-    // Assuming hadiths match by 'number'.
-    // Create a map of English hadiths by number
     final englishMap = {for (var h in englishHadiths) h.number: h};
 
     final List<Hadith> merged = arabicHadiths.map((h) {
@@ -130,8 +145,7 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
       return Hadith(
         number: h.number,
         text: h.text,
-        englishText:
-            eng?.text, // Use the 'text' of the english hadith as 'englishText'
+        englishText: eng?.text,
         narrator: h.narrator ?? eng?.narrator,
         grade: h.grade ?? eng?.grade,
         chapter: h.chapter ?? eng?.chapter,
@@ -140,10 +154,6 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
 
     // If we only have English (edge case)
     if (merged.isEmpty && englishHadiths.isNotEmpty) {
-      // Convert English only to Hadith objects with text as primary?
-      // Or map English to englishText?
-      // User requested Arabic first then English. If no Arabic, just show English in primary text?
-      // Let's stick to valid Arabic preferred.
       emit(HadithsLoaded(englishHadiths, event.englishEditionId!));
       return;
     }
@@ -155,6 +165,7 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
     GetHadithsByEditionEvent event,
     Emitter<HadithState> emit,
   ) async {
+    _lastEvent = event;
     emit(HadithLoading());
     final result = await getHadithByEdition(
       GetHadithByEditionParams(editionId: event.editionId),
@@ -163,5 +174,11 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
       (failure) => emit(HadithError(failure.message)),
       (hadiths) => emit(HadithsLoaded(hadiths, event.editionId)),
     );
+  }
+
+  @override
+  Future<void> close() {
+    _connectivitySubscription?.cancel();
+    return super.close();
   }
 }

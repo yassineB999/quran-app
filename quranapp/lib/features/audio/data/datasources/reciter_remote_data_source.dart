@@ -5,6 +5,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:quranapp/core/error/exceptions.dart';
 import 'package:quranapp/core/network/api_endpoints.dart';
 import 'package:quranapp/core/network/dio_client.dart';
+import 'package:quranapp/core/network/timeout_config.dart';
 import 'package:quranapp/features/audio/data/models/recitation_result_model.dart';
 import 'package:quranapp/features/audio/data/models/reciter_model.dart';
 import 'package:quranapp/features/audio/data/models/audio_info_model.dart';
@@ -28,7 +29,10 @@ class ReciterRemoteDataSourceImpl implements ReciterRemoteDataSource {
 
   @override
   Future<List<ReciterModel>> getReciters() async {
-    final response = await dioClient.get(ApiEndpoints.reciters);
+    final response = await dioClient.get(
+      ApiEndpoints.reciters,
+      options: Options(receiveTimeout: TimeoutConfig.medium),
+    );
 
     if (response.statusCode == 200) {
       final List<dynamic> data = response.data['data'];
@@ -45,6 +49,7 @@ class ReciterRemoteDataSourceImpl implements ReciterRemoteDataSource {
   Future<AudioInfoModel> getAudioUrl(int reciterId, int surahId) async {
     final response = await dioClient.get(
       ApiEndpoints.audio(reciterId, surahId),
+      options: Options(receiveTimeout: TimeoutConfig.medium),
     );
 
     if (response.statusCode == 200) {

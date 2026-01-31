@@ -5,6 +5,8 @@ import 'package:quranapp/config/routes/app_router.dart';
 import 'package:quranapp/config/theme/app_theme.dart';
 import 'package:quranapp/core/di/injection_container.dart';
 import 'package:quranapp/core/localization/locale_cubit.dart';
+import 'package:quranapp/core/network/connectivity_service.dart';
+import 'package:quranapp/core/widgets/offline_banner.dart';
 import 'package:quranapp/l10n/app_localizations.dart';
 
 class QuranApp extends StatelessWidget {
@@ -32,6 +34,14 @@ class QuranApp extends StatelessWidget {
             ],
             supportedLocales: AppLocalizations.supportedLocales,
             routerConfig: sl<AppRouter>().router,
+            builder: (context, child) {
+              return Stack(
+                children: [
+                  child ?? const SizedBox.shrink(),
+                  OfflineBanner(connectivityService: sl<ConnectivityService>()),
+                ],
+              );
+            },
           );
         },
       ),

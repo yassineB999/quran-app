@@ -1,9 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:quranapp/core/error/exceptions.dart';
 import 'package:quranapp/core/network/api_endpoints.dart';
 import 'package:quranapp/core/network/dio_client.dart';
+import 'package:quranapp/core/network/timeout_config.dart';
 import 'package:quranapp/features/adhkar/data/models/adhkar_model.dart';
-import 'package:dio/dio.dart';
 
 abstract class AdhkarRemoteDataSource {
   /// Fetches adhkar for a category
@@ -22,6 +23,7 @@ class AdhkarRemoteDataSourceImpl implements AdhkarRemoteDataSource {
       final arabicResponse = await dioClient.get(
         ApiEndpoints.adhkar(category),
         queryParameters: {'lang': 'ar'},
+        options: Options(receiveTimeout: TimeoutConfig.medium),
       );
 
       if (arabicResponse.statusCode != 200) {
@@ -45,6 +47,7 @@ class AdhkarRemoteDataSourceImpl implements AdhkarRemoteDataSource {
         final englishResponse = await dioClient.get(
           ApiEndpoints.adhkar(category),
           queryParameters: {'lang': 'en'},
+          options: Options(receiveTimeout: TimeoutConfig.medium),
         );
 
         if (englishResponse.statusCode == 200) {
@@ -67,14 +70,15 @@ class AdhkarRemoteDataSourceImpl implements AdhkarRemoteDataSource {
         // English translations might not be available for all categories (e.g. bedtime)
         // or the API might return 422/404. We strictly ignore errors here
         // and return the Arabic content we already have.
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('Adhkar English fetch failed/unavailable: $e');
+        }
       }
 
       return items;
-    } on DioException catch (e) {
-      if (kDebugMode) debugPrint('Adhkar DioException: ${e.message}');
-      throw ServerException(message: 'Connection failed');
+    } on DioException {
+      // Let error interceptor handle this
+      rethrow;
     } catch (e) {
       if (kDebugMode) debugPrint('Adhkar Unexpected Error: $e');
       throw ServerException(message: e.toString());

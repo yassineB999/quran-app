@@ -9,7 +9,7 @@ abstract class Failure extends Equatable {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure([super.message = 'Server Failure']);
+  const ServerFailure([super.message = 'Une erreur est survenue']);
 }
 
 class CacheFailure extends Failure {
@@ -17,9 +17,7 @@ class CacheFailure extends Failure {
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure([
-    super.message = 'Please check your internet connection',
-  ]);
+  const NetworkFailure([super.message = 'Pas de connexion Internet']);
 }
 
 class ValidationFailure extends Failure {

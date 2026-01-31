@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:quranapp/core/error/exceptions.dart';
 import 'package:quranapp/core/network/api_endpoints.dart';
 import 'package:quranapp/core/network/dio_client.dart';
+import 'package:quranapp/core/network/timeout_config.dart';
 import 'package:quranapp/features/quran/data/models/surah_model.dart';
 import 'package:quranapp/features/quran/data/models/surah_page_range_model.dart';
 
@@ -18,7 +20,10 @@ class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
 
   @override
   Future<List<SurahModel>> getSurahs() async {
-    final response = await dioClient.get(ApiEndpoints.surahs);
+    final response = await dioClient.get(
+      ApiEndpoints.surahs,
+      options: Options(receiveTimeout: TimeoutConfig.medium),
+    );
 
     if (response.statusCode == 200) {
       final List<dynamic> data = response.data['data'];
@@ -33,7 +38,10 @@ class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
 
   @override
   Future<SurahModel> getSurah(int id) async {
-    final response = await dioClient.get(ApiEndpoints.surahDetails(id));
+    final response = await dioClient.get(
+      ApiEndpoints.surahDetails(id),
+      options: Options(receiveTimeout: TimeoutConfig.medium),
+    );
 
     if (response.statusCode == 200) {
       return SurahModel.fromJson(response.data['data']);
@@ -47,7 +55,10 @@ class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
 
   @override
   Future<List<VerseModel>> getQuranPage(int page) async {
-    final response = await dioClient.get(ApiEndpoints.quranPage(page));
+    final response = await dioClient.get(
+      ApiEndpoints.quranPage(page),
+      options: Options(receiveTimeout: TimeoutConfig.medium),
+    );
 
     if (response.statusCode == 200) {
       final List<dynamic> data = response.data['data'];
@@ -62,7 +73,10 @@ class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
 
   @override
   Future<SurahPageRangeModel> getSurahPageRange(int surahId) async {
-    final response = await dioClient.get(ApiEndpoints.surahPages(surahId));
+    final response = await dioClient.get(
+      ApiEndpoints.surahPages(surahId),
+      options: Options(receiveTimeout: TimeoutConfig.medium),
+    );
 
     if (response.statusCode == 200) {
       return SurahPageRangeModel.fromJson(response.data['data']);

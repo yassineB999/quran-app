@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:quranapp/core/error/exceptions.dart';
 import 'package:quranapp/core/network/api_endpoints.dart';
 import 'package:quranapp/core/network/dio_client.dart';
+import 'package:quranapp/core/network/timeout_config.dart';
 import 'package:quranapp/features/hadith/data/models/hadith_edition_model.dart';
 import 'package:quranapp/features/hadith/data/models/hadith_model.dart';
 
@@ -16,7 +18,10 @@ class HadithRemoteDataSourceImpl implements HadithRemoteDataSource {
 
   @override
   Future<List<HadithEditionModel>> getEditions() async {
-    final response = await dioClient.get(ApiEndpoints.hadithEditions);
+    final response = await dioClient.get(
+      ApiEndpoints.hadithEditions,
+      options: Options(receiveTimeout: TimeoutConfig.medium),
+    );
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = response.data['data'] ?? {};
@@ -50,6 +55,7 @@ class HadithRemoteDataSourceImpl implements HadithRemoteDataSource {
   Future<List<HadithModel>> getHadiths(String editionId) async {
     final response = await dioClient.get(
       ApiEndpoints.hadithShow(editionId),
+      options: Options(receiveTimeout: TimeoutConfig.medium),
       queryParameters: {'lang': 'ar,en'},
     );
 

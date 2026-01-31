@@ -119,9 +119,7 @@ class _CalendarViewState extends State<_CalendarView> {
 
               if (state is CalendarLoaded) {
                 // Update selected date if not set (first load)
-                if (_selectedDate == null) {
-                  _selectedDate = state.today;
-                }
+                _selectedDate ??= state.today;
 
                 return _buildCalendarContent(context, state, isDark, l10n);
               }
@@ -224,7 +222,9 @@ class _CalendarViewState extends State<_CalendarView> {
     if (dayInfo == null) {
       for (final month in state.cachedMonths.values) {
         dayInfo = findInMonth(month);
-        if (dayInfo != null) break;
+        if (dayInfo != null) {
+          break;
+        }
       }
     }
 

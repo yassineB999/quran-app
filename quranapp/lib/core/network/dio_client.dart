@@ -137,15 +137,16 @@ class _LoggingInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (kDebugMode) {
-      print('┌─────────────────────────────────────────────────────────');
-      print('│ ❌ ERROR: ${err.type} ${err.requestOptions.uri}');
-      print('│ 📦 Message: ${err.message}');
-      if (err.response?.data != null) {
-        print('│ 📦 Error Data: ${err.response?.data}');
-      }
-      print('└─────────────────────────────────────────────────────────');
-    }
+    // Technical error logging disabled - user-friendly errors shown via ErrorMessageMapper
+    // if (kDebugMode) {
+    //   print('┌─────────────────────────────────────────────────────────');
+    //   print('│ ❌ ERROR: ${err.type} ${err.requestOptions.uri}');
+    //   print('│ 📦 Message: ${err.message}');
+    //   if (err.response?.data != null) {
+    //     print('│ 📦 Error Data: ${err.response?.data}');
+    //   }
+    //   print('└─────────────────────────────────────────────────────────');
+    // }
     handler.next(err);
   }
 }
@@ -156,12 +157,18 @@ class _ErrorInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     switch (err.type) {
       case DioExceptionType.connectionTimeout:
+        // Connection timeout - likely network issue
+        throw const NetworkException(message: 'Pas de connexion Internet');
+
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        throw const NetworkException(message: 'Connection timeout');
+        // Send/receive timeout - slow backend
+        throw const NetworkException(
+          message: 'Le serveur met plus de temps que prévu',
+        );
 
       case DioExceptionType.connectionError:
-        throw const NetworkException(message: 'No internet connection');
+        throw const NetworkException(message: 'Pas de connexion Internet');
 
       case DioExceptionType.badResponse:
         final statusCode = err.response?.statusCode;
@@ -188,14 +195,22 @@ class _ErrorInterceptor extends Interceptor {
           }
         }
 
+        // Server errors (5xx) - backend unavailable
+        if (statusCode != null && statusCode >= 500) {
+          throw ServerException(
+            message: 'Impossible de se connecter pour le moment',
+            statusCode: statusCode,
+          );
+        }
+
         final message = _extractErrorMessage(err.response);
         throw ServerException(message: message, statusCode: statusCode);
 
       case DioExceptionType.cancel:
-        throw const ServerException(message: 'Request was cancelled');
+        throw const ServerException(message: 'Requête annulée');
 
       default:
-        throw const ServerException(message: 'An unexpected error occurred');
+        throw const ServerException(message: 'Une erreur est survenue');
     }
   }
 

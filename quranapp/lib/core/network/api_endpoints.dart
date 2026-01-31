@@ -2,8 +2,8 @@
 /// Update the baseUrl to match your API server.
 class ApiEndpoints {
   static const String baseUrl = 'http://192.168.1.9:8001/api';
-  // Connection timeout in milliseconds
-  static const int connectTimeout = 30000;
+  // Connection timeout in milliseconds (10s for fast failure detection)
+  static const int connectTimeout = 20000;
   static const int receiveTimeout = 30000;
 
   // Quran endpoints

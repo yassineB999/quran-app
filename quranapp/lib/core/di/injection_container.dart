@@ -6,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:quranapp/config/routes/app_router.dart';
 import 'package:quranapp/core/network/dio_client.dart';
 import 'package:quranapp/core/network/network_info.dart';
+import 'package:quranapp/core/network/connectivity_service.dart';
 import 'package:quranapp/features/quran/data/datasources/quran_remote_data_source.dart';
 import 'package:quranapp/features/quran/data/datasources/quran_local_data_source.dart';
 import 'package:quranapp/features/quran/data/repositories/quran_repository_impl.dart';
@@ -94,9 +95,16 @@ Future<void> init() async {
   sl.registerLazySingleton<NetworkInfo>(
     () => NetworkInfoImpl(connectivity: sl()),
   );
+  sl.registerLazySingleton(() => ConnectivityService(connectivity: sl()));
 
   //! Features - Quran
-  sl.registerFactory(() => QuranBloc(getSurahDetail: sl(), getAllSurahs: sl()));
+  sl.registerFactory(
+    () => QuranBloc(
+      getSurahDetail: sl(),
+      getAllSurahs: sl(),
+      connectivityService: sl(),
+    ),
+  );
 
   // Use cases
   sl.registerLazySingleton(() => GetSurahDetail(sl()));
@@ -174,7 +182,13 @@ Future<void> init() async {
   );
 
   //! Features - Home
-  sl.registerFactory(() => HomeCubit(getDailyHadith: sl(), getHijriDate: sl()));
+  sl.registerFactory(
+    () => HomeCubit(
+      getDailyHadith: sl(),
+      getHijriDate: sl(),
+      connectivityService: sl(),
+    ),
+  );
 
   sl.registerLazySingleton(() => GetDailyHadith(sl()));
   sl.registerLazySingleton(() => GetHijriDate(sl()));
@@ -189,7 +203,11 @@ Future<void> init() async {
 
   //! Features - Calendar
   sl.registerFactory(
-    () => CalendarBloc(getHijriCalendarMonth: sl(), getHijriCalendarYear: sl()),
+    () => CalendarBloc(
+      getHijriCalendarMonth: sl(),
+      getHijriCalendarYear: sl(),
+      connectivityService: sl(),
+    ),
   );
   sl.registerLazySingleton(() => GetHijriCalendarMonth(sl()));
   sl.registerLazySingleton(() => GetHijriCalendarYear(sl()));
@@ -225,6 +243,7 @@ Future<void> init() async {
       getCurrentLocation: sl(),
       getLocationStream: sl(),
       getNearbyMosques: sl(),
+      connectivityService: sl(),
     ),
   );
   sl.registerLazySingleton(() => GetNearbyMosques(sl()));
@@ -238,7 +257,11 @@ Future<void> init() async {
 
   //! Features - Hadith
   sl.registerFactory(
-    () => HadithBloc(getHadithEditions: sl(), getHadithByEdition: sl()),
+    () => HadithBloc(
+      getHadithEditions: sl(),
+      getHadithByEdition: sl(),
+      connectivityService: sl(),
+    ),
   );
   sl.registerLazySingleton(() => GetHadithEditions(sl()));
   sl.registerLazySingleton(() => GetHadithByEdition(sl()));
@@ -250,7 +273,9 @@ Future<void> init() async {
   );
 
   //! Features - Adhkar
-  sl.registerFactory(() => AdhkarBloc(getAdhkarByCategory: sl()));
+  sl.registerFactory(
+    () => AdhkarBloc(getAdhkarByCategory: sl(), connectivityService: sl()),
+  );
   sl.registerLazySingleton(() => GetAdhkarByCategory(sl()));
   sl.registerLazySingleton<AdhkarRepository>(
     () => AdhkarRepositoryImpl(remoteDataSource: sl()),

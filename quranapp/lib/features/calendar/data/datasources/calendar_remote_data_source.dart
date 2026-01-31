@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:quranapp/core/network/api_endpoints.dart';
 import 'package:quranapp/core/network/dio_client.dart';
+import 'package:quranapp/core/network/timeout_config.dart';
 import 'package:quranapp/features/calendar/data/models/hijri_calendar_day_model.dart';
 
 /// Abstract data source for calendar operations.
@@ -33,6 +35,7 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
     final response = await dioClient.get<Map<String, dynamic>>(
       ApiEndpoints.hijriCalendarMonth(year, month),
       queryParameters: refresh ? {'refresh': 'true'} : null,
+      options: Options(receiveTimeout: TimeoutConfig.medium),
     );
 
     return HijriCalendarMonthModel.fromJson(response.data!);
@@ -48,6 +51,7 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
     final response = await dioClient.get<Map<String, dynamic>>(
       ApiEndpoints.hijriCalendarYear(year),
       queryParameters: {'per_page': 12, if (refresh) 'refresh': 'true'},
+      options: Options(receiveTimeout: TimeoutConfig.heavy),
     );
 
     final data = response.data!;

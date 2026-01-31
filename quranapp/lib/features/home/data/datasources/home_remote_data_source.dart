@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:quranapp/core/error/exceptions.dart';
 import 'package:quranapp/core/network/api_endpoints.dart';
 import 'package:quranapp/core/network/dio_client.dart';
+import 'package:quranapp/core/network/timeout_config.dart';
 import 'package:quranapp/features/home/data/models/daily_hadith_model.dart';
 import 'package:quranapp/features/home/data/models/hijri_date_model.dart';
 
@@ -16,7 +18,10 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Future<DailyHadithModel> getDailyHadith() async {
-    final response = await dioClient.get(ApiEndpoints.hadithDaily);
+    final response = await dioClient.get(
+      ApiEndpoints.hadithDaily,
+      options: Options(receiveTimeout: TimeoutConfig.fast),
+    );
     if (response.statusCode == 200) {
       final payload = response.data;
       final data = payload is Map<String, dynamic> ? payload['data'] : null;
@@ -41,6 +46,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   Future<HijriDateModel> getHijriDate(DateTime date) async {
     final response = await dioClient.get(
       ApiEndpoints.hijriCalendarMonth(date.year, date.month),
+      options: Options(receiveTimeout: TimeoutConfig.fast),
     );
     if (response.statusCode == 200) {
       final payload = response.data;

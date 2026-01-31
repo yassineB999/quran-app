@@ -7,6 +7,7 @@ import 'package:quranapp/core/location/domain/entities/user_location.dart';
 import 'package:quranapp/core/location/domain/usecases/check_location_permission.dart';
 import 'package:quranapp/core/location/domain/usecases/get_current_location.dart';
 import 'package:quranapp/core/location/domain/usecases/get_location_stream.dart';
+import 'package:quranapp/core/network/connectivity_service.dart';
 import 'package:quranapp/features/mosques/domain/entities/mosque.dart';
 import 'package:quranapp/features/mosques/domain/usecases/get_nearby_mosques.dart';
 
@@ -96,7 +97,9 @@ class MosqueBloc extends Bloc<MosqueEvent, MosqueState> {
   final GetCurrentLocation getCurrentLocation;
   final GetLocationStream getLocationStream;
   final GetNearbyMosques getNearbyMosques;
+  final ConnectivityService connectivityService;
   StreamSubscription? _locationSubscription;
+  StreamSubscription? _connectivitySubscription;
   UserLocation? _lastLocation;
   bool _isFetching = false;
 
@@ -105,11 +108,25 @@ class MosqueBloc extends Bloc<MosqueEvent, MosqueState> {
     required this.getCurrentLocation,
     required this.getLocationStream,
     required this.getNearbyMosques,
+    required this.connectivityService,
   }) : super(const MosqueInitial()) {
     on<LoadMosquesEvent>(_onLoadMosques);
     on<MosqueLocationUpdated>(_onLocationUpdated);
     on<MosqueErrorShown>(_onErrorShown);
     on<MosqueLocationFailed>(_onLocationFailed);
+    _setupAutoRetry();
+  }
+
+  void _setupAutoRetry() {
+    _connectivitySubscription = connectivityService.stateStream.listen((state) {
+      if (state is ConnectivityOnline) {
+        if (this.state is MosqueError ||
+            (this.state is MosqueLoaded &&
+                (this.state as MosqueLoaded).errorMessage != null)) {
+          add(const LoadMosquesEvent());
+        }
+      }
+    });
   }
 
   Future<void> _onLoadMosques(
@@ -222,12 +239,20 @@ class MosqueBloc extends Bloc<MosqueEvent, MosqueState> {
 
   void _startLocationUpdates() {
     _locationSubscription?.cancel();
-    _locationSubscription = getLocationStream().listen((result) {
-      result.fold(
-        (failure) => add(MosqueLocationFailed(failure.message)),
-        (location) => add(MosqueLocationUpdated(location)),
-      );
-    });
+    _locationSubscription = getLocationStream().listen(
+      (result) {
+        // Check if Bloc is still active before adding events
+        if (!isClosed) {
+          result.fold(
+            (failure) => add(MosqueLocationFailed(failure.message)),
+            (location) => add(MosqueLocationUpdated(location)),
+          );
+        }
+      },
+      onError: (_) {
+        // Silently handle stream errors to prevent crashes
+      },
+    );
   }
 
   bool _shouldRefresh(UserLocation next) {
@@ -261,6 +286,7 @@ class MosqueBloc extends Bloc<MosqueEvent, MosqueState> {
   @override
   Future<void> close() {
     _locationSubscription?.cancel();
+    _connectivitySubscription?.cancel();
     return super.close();
   }
 }
