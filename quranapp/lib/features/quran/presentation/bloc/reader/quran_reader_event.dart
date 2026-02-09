@@ -30,11 +30,7 @@ class SaveReadingStateEvent extends QuranReaderEvent {
   final int? page;
   final int? surahId;
 
-  const SaveReadingStateEvent({
-    required this.mode,
-    this.page,
-    this.surahId,
-  });
+  const SaveReadingStateEvent({required this.mode, this.page, this.surahId});
 
   @override
   List<Object> get props => [mode, page ?? 0, surahId ?? 0];

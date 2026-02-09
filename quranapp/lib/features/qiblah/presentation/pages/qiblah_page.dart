@@ -5,6 +5,7 @@ import 'package:quranapp/core/di/injection_container.dart';
 import 'package:quranapp/features/qiblah/presentation/bloc/qiblah_bloc.dart';
 import 'package:quranapp/features/qiblah/presentation/bloc/qiblah_state.dart';
 import 'package:quranapp/features/qiblah/presentation/widgets/compass_widget.dart';
+import 'package:quranapp/core/widgets/error_state_widget.dart';
 import 'package:quranapp/l10n/app_localizations.dart';
 
 class QiblahPage extends StatelessWidget {
@@ -37,33 +38,11 @@ class _QiblahView extends StatelessWidget {
               child: CircularProgressIndicator(color: AppTheme.primaryTeal),
             );
           } else if (state is QiblahError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.location_disabled,
-                      size: 48,
-                      color: Colors.orange,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      state.message,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: () {
-                        context.read<QiblahBloc>().add(InitQiblahEvent());
-                      },
-                      child: Text(l10n.tr('allowLocationAccess')),
-                    ),
-                  ],
-                ),
-              ),
+            return ErrorStateWidget(
+              failure: state.failure,
+              onRetry: () {
+                context.read<QiblahBloc>().add(InitQiblahEvent());
+              },
             );
           } else if (state is QiblahLoaded) {
             final data = state.direction;

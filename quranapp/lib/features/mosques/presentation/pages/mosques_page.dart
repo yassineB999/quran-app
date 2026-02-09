@@ -10,6 +10,7 @@ import 'package:quranapp/core/location/domain/entities/user_location.dart';
 import 'package:quranapp/features/mosques/domain/entities/mosque.dart';
 import 'package:quranapp/features/mosques/domain/usecases/get_route_to_mosque.dart';
 import 'package:quranapp/features/mosques/presentation/bloc/mosque_bloc.dart';
+import 'package:quranapp/core/widgets/error_state_widget.dart';
 import 'package:quranapp/l10n/app_localizations.dart';
 
 class MosquesPage extends StatelessWidget {
@@ -99,35 +100,11 @@ class _MosquesViewState extends State<_MosquesView> {
             );
           }
           if (state is MosqueError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.orange,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      state.message,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: () {
-                        context.read<MosqueBloc>().add(
-                          const LoadMosquesEvent(),
-                        );
-                      },
-                      child: Text(l10n.tr('retry')),
-                    ),
-                  ],
-                ),
-              ),
+            return ErrorStateWidget(
+              failure: state.failure,
+              onRetry: () {
+                context.read<MosqueBloc>().add(const LoadMosquesEvent());
+              },
             );
           }
           if (state is MosqueLoaded) {
@@ -158,13 +135,14 @@ class _MosquesViewState extends State<_MosquesView> {
                               ],
                             ),
                           MarkerLayer(markers: _buildMarkers(state, isDark)),
-                          RichAttributionWidget(
-                            attributions: const [
-                              TextSourceAttribution(
-                                '© OpenStreetMap contributors',
-                              ),
-                            ],
-                          ),
+                          // Attribution removed as per user request
+                          // RichAttributionWidget(
+                          //   attributions: const [
+                          //     TextSourceAttribution(
+                          //       '© OpenStreetMap contributors',
+                          //     ),
+                          //   ],
+                          // ),
                         ],
                       ),
                     ),

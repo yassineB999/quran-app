@@ -46,3 +46,8 @@ Route::controller(HijriCalendarController::class)->group(function () {
 });
 
 Route::get('/mosques/nearby', [MosqueController::class, 'nearby']);
+
+Route::get('/test-timeout', function () {
+    sleep(20); // Sleep for 20 seconds to trigger timeout (default fast timeout is 10s)
+    return response()->json(['message' => 'Request completed after delay']);
+});

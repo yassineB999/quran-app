@@ -4,6 +4,7 @@ import 'package:quranapp/features/audio/presentation/bloc/audio_player_bloc.dart
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_event.dart';
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_state.dart';
 import 'package:quranapp/l10n/app_localizations.dart';
+import 'package:quranapp/core/error/failures.dart';
 
 class MediaPlayer extends StatelessWidget {
   const MediaPlayer({super.key});
@@ -66,7 +67,8 @@ class MediaPlayer extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    state.errorMessage ?? l10n.tr('audioErrorOccurred'),
+                    _getErrorMessage(context, state.failure) ??
+                        l10n.tr('audioErrorOccurred'),
                     style: const TextStyle(
                       color: Colors.orangeAccent,
                       fontSize: 12,
@@ -486,5 +488,17 @@ class MediaPlayer extends StatelessWidget {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  String? _getErrorMessage(BuildContext context, Failure? failure) {
+    if (failure == null) return null;
+    final l10n = AppLocalizations.of(context);
+    // Reuse logic from ErrorStateWidget conceptually, or just simple mapping
+    if (failure is NetworkFailure) {
+      return l10n.tr('checkConnectionHint');
+    } else if (failure is ServerFailure) {
+      return l10n.tr('errorOccurred');
+    }
+    return failure.message;
   }
 }

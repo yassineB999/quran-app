@@ -9,6 +9,7 @@ import 'package:quranapp/features/calendar/presentation/bloc/calendar_state.dart
 import 'package:quranapp/features/calendar/presentation/widgets/calendar_header.dart';
 import 'package:quranapp/features/calendar/presentation/widgets/expandable_calendar.dart';
 import 'package:quranapp/features/calendar/presentation/widgets/hijri_month_info_card.dart';
+import 'package:quranapp/core/widgets/error_state_widget.dart';
 import 'package:quranapp/l10n/app_localizations.dart';
 
 class CalendarPage extends StatelessWidget {
@@ -114,7 +115,18 @@ class _CalendarViewState extends State<_CalendarView> {
               }
 
               if (state is CalendarError) {
-                return _buildError(context, state, l10n);
+                return ErrorStateWidget(
+                  failure: state.failure,
+                  onRetry: () {
+                    context.read<CalendarBloc>().add(
+                      LoadCalendarMonth(
+                        year: state.year,
+                        month: state.month,
+                        refresh: true,
+                      ),
+                    );
+                  },
+                );
               }
 
               if (state is CalendarLoaded) {
@@ -341,66 +353,6 @@ class _CalendarViewState extends State<_CalendarView> {
             ),
           ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildError(
-    BuildContext context,
-    CalendarError state,
-    AppLocalizations l10n,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.cloud_off_rounded,
-              size: 64,
-              color: Colors.red.withValues(alpha: 0.7),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.tr('errorOccurred'),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              state.message,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                context.read<CalendarBloc>().add(
-                  LoadCalendarMonth(
-                    year: state.year,
-                    month: state.month,
-                    refresh: true,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryTeal,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(l10n.tr('retry')),
-            ),
-          ],
-        ),
       ),
     );
   }

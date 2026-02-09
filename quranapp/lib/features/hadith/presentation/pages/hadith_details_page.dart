@@ -6,6 +6,7 @@ import 'package:quranapp/features/hadith/presentation/bloc/hadith_bloc.dart';
 import 'package:quranapp/features/hadith/presentation/bloc/hadith_event.dart';
 import 'package:quranapp/features/hadith/presentation/bloc/hadith_state.dart';
 import 'package:quranapp/l10n/app_localizations.dart';
+import 'package:quranapp/core/widgets/error_state_widget.dart';
 import 'package:share_plus/share_plus.dart';
 
 class HadithDetailsPage extends StatelessWidget {
@@ -87,15 +88,13 @@ class _HadithDetailsViewState extends State<_HadithDetailsView> {
               child: CircularProgressIndicator(color: AppTheme.primaryTeal),
             );
           } else if (state is HadithError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  state.message,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
+            return ErrorStateWidget(
+              failure: state.failure,
+              onRetry: () {
+                context.read<HadithBloc>().add(
+                  GetHadithsByEditionEvent(widget.editionId),
+                );
+              },
             );
           } else if (state is HadithsLoaded) {
             if (state.hadiths.isEmpty) {

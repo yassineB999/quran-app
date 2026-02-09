@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/features/quran/domain/entities/surah.dart';
 
 abstract class QuranState extends Equatable {
@@ -30,11 +31,15 @@ class QuranListLoaded extends QuranState {
   List<Object> get props => [surahs];
 }
 
+/// Error state that stores the [Failure] object.
+///
+/// This follows clean architecture by letting the presentation layer
+/// handle localization of error messages via [ErrorStateWidget].
 class QuranError extends QuranState {
-  final String message;
+  final Failure failure;
 
-  const QuranError({required this.message});
+  const QuranError({required this.failure});
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [failure];
 }

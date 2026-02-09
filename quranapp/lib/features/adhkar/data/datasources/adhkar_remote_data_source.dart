@@ -18,71 +18,63 @@ class AdhkarRemoteDataSourceImpl implements AdhkarRemoteDataSource {
 
   @override
   Future<List<AdhkarModel>> getAdhkar(String category) async {
+    // 1. Fetch Arabic Data
+    final arabicResponse = await dioClient.get(
+      ApiEndpoints.adhkar(category),
+      queryParameters: {'lang': 'ar'},
+      options: Options(receiveTimeout: TimeoutConfig.medium),
+    );
+
+    if (arabicResponse.statusCode != 200) {
+      throw ServerException(
+        message: 'Failed to load adhkar',
+        statusCode: arabicResponse.statusCode,
+      );
+    }
+
+    List<AdhkarModel> items = _parseResponse(
+      arabicResponse.data,
+      isEnglish: false,
+    );
+
+    if (kDebugMode) {
+      debugPrint('Adhkar ($category) - Arabic count: ${items.length}');
+    }
+
+    // 2. Fetch English Data (try for all categories)
     try {
-      // 1. Fetch Arabic Data
-      final arabicResponse = await dioClient.get(
+      final englishResponse = await dioClient.get(
         ApiEndpoints.adhkar(category),
-        queryParameters: {'lang': 'ar'},
+        queryParameters: {'lang': 'en'},
         options: Options(receiveTimeout: TimeoutConfig.medium),
       );
 
-      if (arabicResponse.statusCode != 200) {
-        throw ServerException(
-          message: 'Failed to load adhkar',
-          statusCode: arabicResponse.statusCode,
-        );
-      }
-
-      List<AdhkarModel> items = _parseResponse(
-        arabicResponse.data,
-        isEnglish: false,
-      );
-
-      if (kDebugMode) {
-        debugPrint('Adhkar ($category) - Arabic count: ${items.length}');
-      }
-
-      // 2. Fetch English Data (try for all categories)
-      try {
-        final englishResponse = await dioClient.get(
-          ApiEndpoints.adhkar(category),
-          queryParameters: {'lang': 'en'},
-          options: Options(receiveTimeout: TimeoutConfig.medium),
+      if (englishResponse.statusCode == 200) {
+        final englishItems = _parseResponse(
+          englishResponse.data,
+          isEnglish: true,
         );
 
-        if (englishResponse.statusCode == 200) {
-          final englishItems = _parseResponse(
-            englishResponse.data,
-            isEnglish: true,
-          );
-
-          if (kDebugMode) {
-            debugPrint(
-              'Adhkar ($category) - English count: ${englishItems.length}',
-            );
-          }
-
-          if (englishItems.isNotEmpty) {
-            items = _mergeAdhkar(items, englishItems);
-          }
-        }
-      } catch (e) {
-        // English translations might not be available for all categories (e.g. bedtime)
-        // or the API might return 422/404. We strictly ignore errors here
-        // and return the Arabic content we already have.
         if (kDebugMode) {
-          debugPrint('Adhkar English fetch failed/unavailable: $e');
+          debugPrint(
+            'Adhkar ($category) - English count: ${englishItems.length}',
+          );
+        }
+
+        if (englishItems.isNotEmpty) {
+          items = _mergeAdhkar(items, englishItems);
         }
       }
-
-      return items;
-    } on DioException {
-      // Let error interceptor handle this
-      rethrow;
     } catch (e) {
-      if (kDebugMode) debugPrint('Adhkar Unexpected Error: $e');
-      throw ServerException(message: e.toString());
+      // English translations might not be available for all categories (e.g. bedtime)
+      // or the API might return 422/404. We strictly ignore errors here
+      // and return the Arabic content we already have.
+      if (kDebugMode) {
+        debugPrint('Adhkar English fetch failed/unavailable: $e');
+      }
     }
+
+    return items;
   }
 
   /// Robust parser for both Arabic (mixed keys) and English (list) structures

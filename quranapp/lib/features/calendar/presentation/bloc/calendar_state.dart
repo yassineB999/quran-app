@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/features/calendar/domain/entities/hijri_calendar_day.dart';
 
 abstract class CalendarState extends Equatable {
@@ -53,22 +54,16 @@ class CalendarLoaded extends CalendarState {
 }
 
 class CalendarError extends CalendarState {
-  final String message;
+  final Failure failure;
   final int year;
   final int month;
-  // Keep previous cache even on error to prevent total UI fail if possible,
-  // but for simplicity we might just start fresh or hold last success.
-  // Actually, we should probably just emit Loaded with error message snackbar
-  // if we want to keep the UI up. But standard BLoC pattern separates Error state.
-  // Let's keep it simple: Error state replaces UI.
-  // Or better: CalendarLoaded can carry an error.
 
   const CalendarError({
-    required this.message,
+    required this.failure,
     required this.year,
     required this.month,
   });
 
   @override
-  List<Object?> get props => [message, year, month];
+  List<Object?> get props => [failure, year, month];
 }

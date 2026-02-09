@@ -8,6 +8,7 @@ import 'package:quranapp/core/location/domain/usecases/check_location_permission
 import 'package:quranapp/core/location/domain/usecases/get_current_location.dart';
 import 'package:quranapp/core/location/domain/usecases/get_location_stream.dart';
 import 'package:quranapp/core/network/connectivity_service.dart';
+import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/features/mosques/domain/entities/mosque.dart';
 import 'package:quranapp/features/mosques/domain/usecases/get_nearby_mosques.dart';
 
@@ -37,12 +38,12 @@ class MosqueErrorShown extends MosqueEvent {
 }
 
 class MosqueLocationFailed extends MosqueEvent {
-  final String message;
+  final Failure failure;
 
-  const MosqueLocationFailed(this.message);
+  const MosqueLocationFailed(this.failure);
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 // State
@@ -83,12 +84,12 @@ class MosqueLoaded extends MosqueState {
 }
 
 class MosqueError extends MosqueState {
-  final String message;
+  final Failure failure;
 
-  const MosqueError(this.message);
+  const MosqueError(this.failure);
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 // Bloc
@@ -155,7 +156,7 @@ class MosqueBloc extends Bloc<MosqueEvent, MosqueState> {
 
     final locationResult = await getCurrentLocation();
     final location = locationResult.fold((failure) {
-      _emitFailure(failure.message, emit);
+      _emitFailure(failure, emit);
       return null;
     }, (value) => value);
     if (location == null) {
@@ -204,7 +205,7 @@ class MosqueBloc extends Bloc<MosqueEvent, MosqueState> {
     MosqueLocationFailed event,
     Emitter<MosqueState> emit,
   ) {
-    _emitFailure(event.message, emit);
+    _emitFailure(event.failure, emit);
   }
 
   Future<void> _fetchNearby(
@@ -214,27 +215,25 @@ class MosqueBloc extends Bloc<MosqueEvent, MosqueState> {
     _isFetching = true;
     final mosquesResult = await getNearbyMosques(location: location);
     _isFetching = false;
-    mosquesResult.fold((failure) => _emitFailure(failure.message, emit), (
-      mosques,
-    ) {
+    mosquesResult.fold((failure) => _emitFailure(failure, emit), (mosques) {
       _lastLocation = location;
       emit(MosqueLoaded(location: location, mosques: mosques));
     });
   }
 
-  void _emitFailure(String message, Emitter<MosqueState> emit) {
+  void _emitFailure(Failure failure, Emitter<MosqueState> emit) {
     if (state is MosqueLoaded) {
       final current = state as MosqueLoaded;
       emit(
         MosqueLoaded(
           location: current.location,
           mosques: current.mosques,
-          errorMessage: message,
+          errorMessage: failure.message,
         ),
       );
       return;
     }
-    emit(MosqueError(message));
+    emit(MosqueError(failure));
   }
 
   void _startLocationUpdates() {
@@ -244,7 +243,7 @@ class MosqueBloc extends Bloc<MosqueEvent, MosqueState> {
         // Check if Bloc is still active before adding events
         if (!isClosed) {
           result.fold(
-            (failure) => add(MosqueLocationFailed(failure.message)),
+            (failure) => add(MosqueLocationFailed(failure)),
             (location) => add(MosqueLocationUpdated(location)),
           );
         }

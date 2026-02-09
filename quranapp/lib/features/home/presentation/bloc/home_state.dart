@@ -20,10 +20,7 @@ class HomeState extends Equatable {
   });
 
   factory HomeState.initial() {
-    return const HomeState(
-      isHadithLoading: true,
-      isHijriLoading: true,
-    );
+    return const HomeState(isHadithLoading: true, isHijriLoading: true);
   }
 
   HomeState copyWith({
@@ -46,11 +43,11 @@ class HomeState extends Equatable {
 
   @override
   List<Object?> get props => [
-        dailyHadith,
-        hijriDate,
-        isHadithLoading,
-        isHijriLoading,
-        hadithError,
-        hijriError,
-      ];
+    dailyHadith,
+    hijriDate,
+    isHadithLoading,
+    isHijriLoading,
+    hadithError,
+    hijriError,
+  ];
 }

@@ -43,7 +43,7 @@ class AdhkarBloc extends Bloc<AdhkarEvent, AdhkarState> {
     );
 
     result.fold(
-      (failure) => emit(AdhkarError(failure.message)),
+      (failure) => emit(AdhkarError(failure)),
       (adhkarList) => emit(
         AdhkarLoaded(
           adhkarList: adhkarList,

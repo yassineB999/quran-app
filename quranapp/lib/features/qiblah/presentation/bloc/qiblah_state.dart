@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/features/qiblah/domain/entities/qiblah_direction.dart';
 
 abstract class QiblahEvent extends Equatable {
@@ -17,10 +18,10 @@ class UpdateQiblahEvent extends QiblahEvent {
 }
 
 class QiblahErrorEvent extends QiblahEvent {
-  final String message;
-  const QiblahErrorEvent(this.message);
+  final Failure failure;
+  const QiblahErrorEvent(this.failure);
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 // States
@@ -42,8 +43,8 @@ class QiblahLoaded extends QiblahState {
 }
 
 class QiblahError extends QiblahState {
-  final String message;
-  const QiblahError(this.message);
+  final Failure failure;
+  const QiblahError(this.failure);
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }

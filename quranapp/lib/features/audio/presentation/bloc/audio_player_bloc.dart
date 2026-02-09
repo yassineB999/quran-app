@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/core/usecases/usecase.dart';
 import 'package:quranapp/features/audio/domain/entities/reciter.dart';
 import 'package:quranapp/features/audio/domain/usecases/get_audio_url.dart';
@@ -97,12 +98,8 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     final result = await getReciters(NoParams());
 
     result.fold(
-      (failure) => emit(
-        AudioPlayerError(
-          errorMessage: failure.message,
-          surahId: _currentSurahId,
-        ),
-      ),
+      (failure) =>
+          emit(AudioPlayerError(failure: failure, surahId: _currentSurahId)),
       (reciters) {
         _reciters = reciters;
         if (reciters.isNotEmpty && _currentReciter == null) {
@@ -152,7 +149,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
       (failure) async {
         emit(
           AudioPlayerError(
-            errorMessage: failure.message,
+            failure: failure,
             surahId: _currentSurahId,
             currentReciter: _currentReciter,
             availableReciters: _reciters,
@@ -193,7 +190,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
         } catch (e) {
           emit(
             AudioPlayerError(
-              errorMessage: 'Failed to load audio: $e',
+              failure: CacheFailure('Failed to load audio: $e'),
               surahId: _currentSurahId,
               currentReciter: _currentReciter,
               availableReciters: _reciters,
@@ -304,7 +301,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     } catch (e) {
       emit(
         AudioPlayerError(
-          errorMessage: 'Failed to play playlist: $e',
+          failure: CacheFailure('Failed to play playlist: $e'),
           surahId: _currentSurahId,
           currentReciter: _currentReciter,
           availableReciters: _reciters,

@@ -6,6 +6,7 @@ import 'package:quranapp/features/adhkar/presentation/bloc/adhkar_bloc.dart';
 import 'package:quranapp/features/adhkar/presentation/bloc/adhkar_event.dart';
 import 'package:quranapp/features/adhkar/presentation/bloc/adhkar_state.dart';
 import 'package:quranapp/l10n/app_localizations.dart';
+import 'package:quranapp/core/widgets/error_state_widget.dart';
 import 'package:share_plus/share_plus.dart';
 
 class AdhkarListPage extends StatelessWidget {
@@ -87,35 +88,13 @@ class _AdhkarListViewState extends State<_AdhkarListView> {
               child: CircularProgressIndicator(color: AppTheme.primaryTeal),
             );
           } else if (state is AdhkarError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: theme.colorScheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      state.message,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: theme.colorScheme.error),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<AdhkarBloc>().add(
-                          GetAdhkarByCategoryEvent(widget.category),
-                        );
-                      },
-                      child: Text(l10n.tr('retry')),
-                    ),
-                  ],
-                ),
-              ),
+            return ErrorStateWidget(
+              failure: state.failure,
+              onRetry: () {
+                context.read<AdhkarBloc>().add(
+                  GetAdhkarByCategoryEvent(widget.category),
+                );
+              },
             );
           } else if (state is AdhkarLoaded) {
             if (state.adhkarList.isEmpty) {

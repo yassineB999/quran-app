@@ -137,16 +137,6 @@ class _LoggingInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    // Technical error logging disabled - user-friendly errors shown via ErrorMessageMapper
-    // if (kDebugMode) {
-    //   print('┌─────────────────────────────────────────────────────────');
-    //   print('│ ❌ ERROR: ${err.type} ${err.requestOptions.uri}');
-    //   print('│ 📦 Message: ${err.message}');
-    //   if (err.response?.data != null) {
-    //     print('│ 📦 Error Data: ${err.response?.data}');
-    //   }
-    //   print('└─────────────────────────────────────────────────────────');
-    // }
     handler.next(err);
   }
 }

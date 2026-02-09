@@ -14,5 +14,9 @@ abstract class ReciterRepository {
   Future<Either<Failure, AudioInfo>> getAudioUrl(int reciterId, int surahId);
 
   /// Check recitation audio
-  Future<Either<Failure, RecitationResult>> checkRecitation(String filePath, int surahId, int ayahId);
+  Future<Either<Failure, RecitationResult>> checkRecitation(
+    String filePath,
+    int surahId,
+    int ayahId,
+  );
 }

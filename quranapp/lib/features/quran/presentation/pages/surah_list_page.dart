@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quranapp/config/theme/app_theme.dart';
 import 'package:quranapp/core/di/injection_container.dart';
+import 'package:quranapp/core/widgets/error_state_widget.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_bloc.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_event.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_state.dart';
@@ -118,15 +119,11 @@ class _SurahListViewState extends State<_SurahListView> {
                     );
                   }
                   if (state is QuranError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          state.message,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: colorScheme.error),
-                        ),
-                      ),
+                    return ErrorStateWidget(
+                      failure: state.failure,
+                      onRetry: () {
+                        context.read<QuranBloc>().add(GetAllSurahsEvent());
+                      },
                     );
                   }
                   if (state is QuranListLoaded) {

@@ -106,11 +106,7 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
         // If year fetch fails, we could try single month fetch?
         // Or just show error. Showing error is safer.
         emit(
-          CalendarError(
-            message: failure.message,
-            year: event.year,
-            month: event.month,
-          ),
+          CalendarError(failure: failure, year: event.year, month: event.month),
         );
       },
       (monthsList) {

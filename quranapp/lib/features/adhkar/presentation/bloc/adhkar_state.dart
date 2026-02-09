@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/features/adhkar/domain/entities/adhkar.dart';
 
 abstract class AdhkarState extends Equatable {
@@ -28,10 +29,10 @@ class AdhkarLoaded extends AdhkarState {
 }
 
 class AdhkarError extends AdhkarState {
-  final String message;
+  final Failure failure;
 
-  const AdhkarError(this.message);
+  const AdhkarError(this.failure);
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [failure];
 }

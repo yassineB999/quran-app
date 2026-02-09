@@ -13,7 +13,9 @@ class DailyHadithModel extends DailyHadith {
       arabic: map['arabic']?.toString() ?? '',
       translation: map['translation']?.toString() ?? '',
       reference: map['reference']?.toString() ?? '',
-      number: map['number'] is int ? map['number'] as int : int.tryParse('${map['number']}'),
+      number: map['number'] is int
+          ? map['number'] as int
+          : int.tryParse('${map['number']}'),
     );
   }
 }

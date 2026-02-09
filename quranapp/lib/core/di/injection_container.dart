@@ -266,7 +266,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetHadithEditions(sl()));
   sl.registerLazySingleton(() => GetHadithByEdition(sl()));
   sl.registerLazySingleton<HadithRepository>(
-    () => HadithRepositoryImpl(remoteDataSource: sl()),
+    () => HadithRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
   );
   sl.registerLazySingleton<HadithRemoteDataSource>(
     () => HadithRemoteDataSourceImpl(dioClient: sl()),
@@ -278,7 +278,7 @@ Future<void> init() async {
   );
   sl.registerLazySingleton(() => GetAdhkarByCategory(sl()));
   sl.registerLazySingleton<AdhkarRepository>(
-    () => AdhkarRepositoryImpl(remoteDataSource: sl()),
+    () => AdhkarRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
   );
   sl.registerLazySingleton<AdhkarRemoteDataSource>(
     () => AdhkarRemoteDataSourceImpl(dioClient: sl()),

@@ -192,9 +192,7 @@ class _MushafRecitationViewState extends State<_MushafRecitationView> {
                 Text(
                   l10n.tr(
                     'doneCount',
-                    params: {
-                      'count': '${state.session.completedAyahs.length}',
-                    },
+                    params: {'count': '${state.session.completedAyahs.length}'},
                   ),
                   style: const TextStyle(
                     color: Colors.green,

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/features/audio/domain/entities/reciter.dart';
 
 /// Base class for audio player states
@@ -10,7 +11,7 @@ abstract class AudioPlayerState extends Equatable {
   final Duration duration;
   final double speed;
   final bool isRepeating;
-  final String? errorMessage;
+  final Failure? failure;
   final String status;
 
   const AudioPlayerState({
@@ -21,7 +22,7 @@ abstract class AudioPlayerState extends Equatable {
     this.duration = Duration.zero,
     this.speed = 1.0,
     this.isRepeating = false,
-    this.errorMessage,
+    this.failure,
     this.status = 'initial',
   });
 
@@ -34,7 +35,7 @@ abstract class AudioPlayerState extends Equatable {
     duration,
     speed,
     isRepeating,
-    errorMessage,
+    failure,
     status,
   ];
 }
@@ -122,9 +123,9 @@ class AudioPlayerPaused extends AudioPlayerState {
 /// Error state
 class AudioPlayerError extends AudioPlayerState {
   const AudioPlayerError({
-    required super.errorMessage,
+    required Failure failure,
     super.surahId,
     super.currentReciter,
     super.availableReciters,
-  }) : super(status: 'error');
+  }) : super(status: 'error', failure: failure);
 }

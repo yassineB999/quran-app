@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/core/network/connectivity_service.dart';
 import 'package:quranapp/core/usecases/usecase.dart';
 import 'package:quranapp/features/hadith/domain/entities/hadith.dart';
@@ -52,7 +53,7 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
     _lastEvent = event;
     emit(HadithLoading());
     final result = await getHadithEditions(NoParams());
-    result.fold((failure) => emit(HadithError(failure.message)), (editions) {
+    result.fold((failure) => emit(HadithError(failure)), (editions) {
       // Group by collection
       final Map<String, List<HadithEdition>> grouped = {};
       for (var edition in editions) {
@@ -111,17 +112,17 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
     // Fetch both asynchronously
     List<Hadith> arabicHadiths = [];
     List<Hadith> englishHadiths = [];
-    String? errorMessage;
+    Failure? errorFailure;
 
     if (event.arabicEditionId != null) {
       final result = await getHadithByEdition(
         GetHadithByEditionParams(editionId: event.arabicEditionId!),
       );
-      result.fold((l) => errorMessage = l.message, (r) => arabicHadiths = r);
+      result.fold((l) => errorFailure = l, (r) => arabicHadiths = r);
     }
 
-    if (errorMessage != null && event.englishEditionId == null) {
-      emit(HadithError(errorMessage!));
+    if (errorFailure != null && event.englishEditionId == null) {
+      emit(HadithError(errorFailure!));
       return;
     }
 
@@ -129,11 +130,11 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
       final result = await getHadithByEdition(
         GetHadithByEditionParams(editionId: event.englishEditionId!),
       );
-      result.fold((l) => errorMessage ??= l.message, (r) => englishHadiths = r);
+      result.fold((l) => errorFailure ??= l, (r) => englishHadiths = r);
     }
 
     if (arabicHadiths.isEmpty && englishHadiths.isEmpty) {
-      emit(HadithError(errorMessage ?? 'No hadiths found'));
+      emit(HadithError(errorFailure ?? CacheFailure('No hadiths found')));
       return;
     }
 
@@ -171,7 +172,7 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
       GetHadithByEditionParams(editionId: event.editionId),
     );
     result.fold(
-      (failure) => emit(HadithError(failure.message)),
+      (failure) => emit(HadithError(failure)),
       (hadiths) => emit(HadithsLoaded(hadiths, event.editionId)),
     );
   }

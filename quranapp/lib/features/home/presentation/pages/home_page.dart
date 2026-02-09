@@ -70,8 +70,8 @@ class HomeShellPage extends StatelessWidget {
             label: l10n.tr('mosquesLabel'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.lightbulb_outline),
-            activeIcon: const Icon(Icons.lightbulb),
+            icon: const Icon(Icons.mic_none_outlined),
+            activeIcon: const Icon(Icons.mic),
             label: l10n.tr('audioLabel'),
           ),
           BottomNavigationBarItem(

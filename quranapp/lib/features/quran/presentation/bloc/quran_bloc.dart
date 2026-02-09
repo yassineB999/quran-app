@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/core/network/connectivity_service.dart';
 import 'package:quranapp/features/quran/domain/usecases/get_surah_detail.dart';
 import 'package:quranapp/features/quran/presentation/bloc/quran_event.dart';
@@ -10,6 +9,12 @@ import 'package:quranapp/features/quran/presentation/bloc/quran_state.dart';
 import 'package:quranapp/core/usecases/usecase.dart';
 import 'package:quranapp/features/quran/domain/usecases/get_all_surahs.dart';
 
+/// BLoC for managing Quran-related state.
+///
+/// Following clean architecture, this BLoC:
+/// - Emits [Failure] objects directly in [QuranError] state
+/// - Lets the presentation layer handle error message localization
+/// - Supports auto-retry when connectivity is restored
 class QuranBloc extends Bloc<QuranEvent, QuranState> {
   final GetSurahDetail getSurahDetail;
   final GetAllSurahs getAllSurahs;
@@ -26,7 +31,7 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     _setupAutoRetry();
   }
 
-  /// Auto-retry when reconnecting
+  /// Auto-retry when reconnecting after a network error
   void _setupAutoRetry() {
     _connectivitySubscription = connectivityService.stateStream.listen((state) {
       if (state is ConnectivityOnline && this.state is QuranError) {
@@ -44,7 +49,7 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     final result = await getAllSurahs(NoParams());
     emit(
       result.fold(
-        (failure) => QuranError(message: _mapFailureToMessage(failure)),
+        (failure) => QuranError(failure: failure),
         (surahs) => QuranListLoaded(surahs: surahs),
       ),
     );
@@ -58,28 +63,10 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     final result = await getSurahDetail(GetSurahDetailParams(id: event.id));
     emit(
       result.fold(
-        (failure) => QuranError(message: _mapFailureToMessage(failure)),
+        (failure) => QuranError(failure: failure),
         (surah) => QuranLoaded(surah: surah),
       ),
     );
-  }
-
-  String _mapFailureToMessage(Failure failure) {
-    switch (failure) {
-      case ServerFailure():
-        if (failure.message.contains('Impossible de se connecter')) {
-          return 'Impossible de se connecter pour le moment';
-        }
-        return 'Une erreur est survenue. Veuillez réessayer plus tard.';
-      case NetworkFailure():
-        if (failure.message.contains('temps') ||
-            failure.message.contains('prévu')) {
-          return 'Le serveur met plus de temps que prévu';
-        }
-        return 'Pas de connexion Internet';
-      default:
-        return 'Une erreur est survenue';
-    }
   }
 
   @override

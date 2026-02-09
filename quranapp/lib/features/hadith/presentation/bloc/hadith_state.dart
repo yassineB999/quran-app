@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:quranapp/core/error/failures.dart';
 import 'package:quranapp/features/hadith/domain/entities/hadith.dart';
 import 'package:quranapp/features/hadith/domain/entities/hadith_edition.dart';
 import 'package:quranapp/features/hadith/domain/entities/hadith_book.dart';
@@ -43,10 +44,10 @@ class HadithsLoaded extends HadithState {
 }
 
 class HadithError extends HadithState {
-  final String message;
+  final Failure failure;
 
-  const HadithError(this.message);
+  const HadithError(this.failure);
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [failure];
 }

@@ -23,7 +23,7 @@ class QiblahBloc extends Bloc<QiblahEvent, QiblahState> {
     final stream = getQiblahStream();
     _qiblahSubscription = stream.listen((result) {
       result.fold(
-        (failure) => add(QiblahErrorEvent(failure.message)),
+        (failure) => add(QiblahErrorEvent(failure)),
         (direction) => add(UpdateQiblahEvent(direction)),
       );
     });
@@ -34,7 +34,7 @@ class QiblahBloc extends Bloc<QiblahEvent, QiblahState> {
   }
 
   void _onQiblahError(QiblahErrorEvent event, Emitter<QiblahState> emit) {
-    emit(QiblahError(event.message));
+    emit(QiblahError(event.failure));
   }
 
   @override

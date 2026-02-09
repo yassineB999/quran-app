@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quranapp/core/di/injection_container.dart';
+import 'package:quranapp/core/widgets/error_state_widget.dart';
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_bloc.dart';
 import 'package:quranapp/features/audio/presentation/bloc/audio_player_event.dart';
 import 'package:quranapp/features/audio/presentation/widgets/media_player.dart';
@@ -140,34 +141,13 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
                     ),
                   );
                 } else if (state is QuranError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: colorScheme.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            state.message,
-                            style: theme.textTheme.bodyLarge,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          FilledButton(
-                            // Modern M3 button
-                            onPressed: () {
-                              // Retry logic placeholder
-                            },
-                            child: Text(l10n.tr('goBack')),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ErrorStateWidget(
+                    failure: state.failure,
+                    onRetry: () {
+                      context.read<QuranBloc>().add(
+                        GetSurahDetailEvent(id: widget.surahId),
+                      );
+                    },
                   );
                 } else if (state is QuranLoaded) {
                   return ListView.builder(

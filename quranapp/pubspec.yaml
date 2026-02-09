@@ -52,6 +52,8 @@ dependencies:
   flutter_map: ^8.2.1
   latlong2: ^0.9.1
   record: ^6.1.2
+  cached_network_image: ^3.4.1
+  photo_view: ^0.15.0
 
 dev_dependencies:
   flutter_test:
