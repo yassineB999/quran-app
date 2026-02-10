@@ -155,7 +155,10 @@ class _SurahListViewState extends State<_SurahListView> {
                             openMushafOnTap: widget.openMushafOnTap,
                             onTap: () {
                               if (widget.openMushafOnTap) {
-                                context.push('/mushaf/${surah.number}');
+                                context.push(
+                                  '/mushaf/${surah.number}',
+                                  extra: surah.name,
+                                );
                               } else {
                                 context.push('/quran/${surah.number}');
                               }
@@ -163,13 +166,19 @@ class _SurahListViewState extends State<_SurahListView> {
                             onLongPress: widget.openMushafOnTap
                                 ? null
                                 : () {
-                                    context.push('/mushaf/${surah.number}');
+                                    context.push(
+                                      '/mushaf/${surah.number}',
+                                      extra: surah.name,
+                                    );
                                   },
                             onReadTap: () {
                               context.push('/quran/${surah.number}');
                             },
                             onMushafTap: () {
-                              context.push('/mushaf/${surah.number}');
+                              context.push(
+                                '/mushaf/${surah.number}',
+                                extra: surah.name,
+                              );
                             },
                           );
                         },

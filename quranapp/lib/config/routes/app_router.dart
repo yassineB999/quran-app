@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quranapp/features/audio/presentation/pages/live_recitation_page.dart';
 import 'package:quranapp/features/home/presentation/pages/home_page.dart';
 import 'package:quranapp/features/quran/presentation/pages/surah_list_page.dart';
 import 'package:quranapp/features/quran/presentation/pages/surah_detail_page.dart';
@@ -65,7 +67,8 @@ class AppRouter {
         path: '/mushaf/:surahId',
         builder: (context, state) {
           final surahId = int.tryParse(state.pathParameters['surahId']!) ?? 1;
-          return MushafRecitationPage(surahId: surahId);
+          final surahName = state.extra as String?;
+          return MushafRecitationPage(surahId: surahId, surahName: surahName);
         },
       ),
       GoRoute(path: '/qiblah', builder: (context, state) => const QiblahPage()),
@@ -97,6 +100,10 @@ class AppRouter {
           final category = state.pathParameters['category']!;
           return AdhkarListPage(category: category);
         },
+      ),
+      GoRoute(
+        path: '/live-recitation',
+        builder: (context, state) => const LiveRecitationPage(),
       ),
     ],
   );

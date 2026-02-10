@@ -7,6 +7,7 @@ class Verse extends Equatable {
   final int numberInSurah;
   final int juz;
   final int page;
+  final int surahNumber;
 
   const Verse({
     required this.number,
@@ -15,6 +16,7 @@ class Verse extends Equatable {
     required this.numberInSurah,
     required this.juz,
     required this.page,
+    required this.surahNumber,
   });
 
   @override
@@ -25,6 +27,7 @@ class Verse extends Equatable {
     numberInSurah,
     juz,
     page,
+    surahNumber,
   ];
 }
 

@@ -4,7 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:quranapp/config/routes/app_router.dart';
+import 'package:quranapp/core/network/api_endpoints.dart';
 import 'package:quranapp/core/network/dio_client.dart';
+import 'package:record/record.dart';
+import 'package:quranapp/features/audio/data/datasources/websocket_data_source.dart';
+import 'package:quranapp/features/quran/presentation/bloc/recitation/recitation_bloc.dart';
 import 'package:quranapp/core/network/network_info.dart';
 import 'package:quranapp/core/network/connectivity_service.dart';
 import 'package:quranapp/features/quran/data/datasources/quran_remote_data_source.dart';
@@ -180,6 +184,21 @@ Future<void> init() async {
   sl.registerLazySingleton<ReciterRemoteDataSource>(
     () => ReciterRemoteDataSourceImpl(dioClient: sl()),
   );
+
+  //! Features - Recitation
+  sl.registerFactory(
+    () => RecitationBloc(
+      webSocketDataSource: sl(),
+      audioRecorder: sl(),
+      getSurahDetail: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(
+    () => WebSocketDataSource(url: ApiEndpoints.recitationWebSocket),
+  );
+
+  sl.registerLazySingleton(() => AudioRecorder());
 
   //! Features - Home
   sl.registerFactory(

@@ -1,8 +1,8 @@
 /// Centralized API endpoints for the Laravel API.
 /// Update the baseUrl to match your API server.
 class ApiEndpoints {
-  static const String baseUrl = 'http://192.168.1.9:8001/api';
-  // Connection timeout in milliseconds (10s for fast failure detection)
+  static const String baseUrl =
+      'http://192.168.1.9:8001/api'; // Connection timeout in milliseconds (10s for fast failure detection)
   static const int connectTimeout = 20000;
   static const int receiveTimeout = 30000;
 
@@ -33,5 +33,10 @@ class ApiEndpoints {
   static const String nearbyMosques = '/mosques/nearby';
 
   // Adhkar endpoints
+  // Adhkar endpoints
   static String adhkar(String category) => '/adhkar/$category';
+
+  // Recitation
+  static const String recitationWebSocket = 'ws://192.168.1.9:8000/ws/recite';
+  static String surahWords(int id) => '$surahs/$id/words';
 }

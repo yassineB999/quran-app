@@ -1,7 +1,0 @@
-pytorch_model.bin
-__pycache__
-.git
-.gitignore
-venv
-.env
-*.pyc

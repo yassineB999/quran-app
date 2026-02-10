@@ -8,6 +8,7 @@ class VerseModel extends Verse {
     required super.numberInSurah,
     required super.juz,
     required super.page,
+    required super.surahNumber,
   });
 
   factory VerseModel.fromJson(Map<String, dynamic> json) {
@@ -18,6 +19,7 @@ class VerseModel extends Verse {
       numberInSurah: json['number_in_surah'] ?? 0,
       juz: json['juz'] ?? 0,
       page: json['page'] ?? 0,
+      surahNumber: json['surah_number'] ?? 0,
     );
   }
 }
