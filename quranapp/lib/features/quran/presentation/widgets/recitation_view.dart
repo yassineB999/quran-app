@@ -71,9 +71,8 @@ class _RecitationViewState extends State<RecitationView> {
       case 'correct':
         return const Color(0xFF16A34A);
       case 'mistake':
+      case 'skipped': // Treat same as mistake (Tarteel-style: green/red only)
         return const Color(0xFFDC2626);
-      case 'skipped':
-        return const Color(0xFFD97706);
       case 'active':
         return isDark ? const Color(0xFF38BDF8) : AppTheme.primaryTeal;
       default: // pending
@@ -111,13 +110,15 @@ class _RecitationViewState extends State<RecitationView> {
                         ? AppTheme.primaryTeal.withValues(alpha: 0.15)
                         : AppTheme.primaryTeal.withValues(alpha: 0.08))
                   : null,
-              decoration: word.status == 'mistake'
+              decoration: (word.status == 'mistake' || word.status == 'skipped')
                   ? TextDecoration.underline
                   : TextDecoration.none,
-              decorationColor: word.status == 'mistake'
+              decorationColor:
+                  (word.status == 'mistake' || word.status == 'skipped')
                   ? const Color(0xFFDC2626)
                   : null,
-              decorationStyle: word.status == 'mistake'
+              decorationStyle:
+                  (word.status == 'mistake' || word.status == 'skipped')
                   ? TextDecorationStyle.wavy
                   : null,
             ),

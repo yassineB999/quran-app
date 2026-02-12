@@ -275,11 +275,11 @@ class RecitationSession:
                     best_ahead_offset = offset
             
             if best_ahead_offset > 0:
-                # Skip detected - mark skipped words
+                # Skip detected - mark skipped words as mistakes (Tarteel-style: green/red only)
                 for skip_offset in range(best_ahead_offset):
                     skip_ayah, skip_word_idx, skip_display, _ = self.flat_words[self.current_position + skip_offset]
                     self._record_word_status(
-                        skip_ayah, skip_word_idx, skip_display, 'skipped', None, 0
+                        skip_ayah, skip_word_idx, skip_display, 'mistake', None, 0
                     )
                 
                 # Move position past skipped words

@@ -6,6 +6,7 @@ It only handles HTTP concerns - all business logic is in other modules.
 """
 
 import os
+import re
 import logging
 from pathlib import Path
 from typing import Optional
@@ -20,6 +21,19 @@ from app.queue.job_queue import job_queue
 from app.queue.worker import background_worker
 
 logger = logging.getLogger(__name__)
+
+
+def _is_valid_arabic_word(word: str) -> bool:
+    """
+    Check if a word has actual Arabic letter content (not just diacritics/marks).
+    Filters out Whisper garbage like lone kasra 'ِ' or empty fragments.
+    """
+    # Remove tashkeel (diacritics)
+    cleaned = re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7-\u06E8\u06EA-\u06ED]', '', word)
+    # Remove tatweel
+    cleaned = cleaned.replace('\u0640', '')
+    # Check if any actual Arabic letters remain
+    return bool(re.search(r'[\u0621-\u063A\u0641-\u064A]', cleaned))
 
 
 def create_app() -> FastAPI:
@@ -551,6 +565,11 @@ def _register_routes(app: FastAPI):
                                         f"transcription (repeated words): {current_text[:60]}..."
                                     )
                                     current_text = ""
+                        
+                        if current_text:
+                            # Filter out garbage words (lone diacritics, empty fragments)
+                            filtered_words = [w for w in current_text.split() if _is_valid_arabic_word(w)]
+                            current_text = ' '.join(filtered_words)
                         
                         if current_text:
                             # Merge text with overlap handling

@@ -77,11 +77,9 @@ class RecitationState extends Equatable {
   /// Count of correct words
   int get correctWordsCount => words.where((w) => w.status == 'correct').length;
 
-  /// Count of mistakes
-  int get mistakesCount => words.where((w) => w.status == 'mistake').length;
-
-  /// Count of skipped words
-  int get skippedCount => words.where((w) => w.status == 'skipped').length;
+  /// Count of mistakes (includes skipped words — Tarteel-style)
+  int get mistakesCount =>
+      words.where((w) => w.status == 'mistake' || w.status == 'skipped').length;
 
   @override
   List<Object?> get props => [
