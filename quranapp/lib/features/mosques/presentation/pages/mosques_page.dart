@@ -127,6 +127,7 @@ class _MosquesViewState extends State<_MosquesView> {
                         children: [
                           TileLayer(
                             urlTemplate: AppConstants.openStreetMapTileUrl,
+                            userAgentPackageName: 'com.example.quranapp',
                           ),
                           if (_routePoints.isNotEmpty)
                             PolylineLayer(
@@ -135,14 +136,13 @@ class _MosquesViewState extends State<_MosquesView> {
                               ],
                             ),
                           MarkerLayer(markers: _buildMarkers(state, isDark)),
-                          // Attribution removed as per user request
-                          // RichAttributionWidget(
-                          //   attributions: const [
-                          //     TextSourceAttribution(
-                          //       '© OpenStreetMap contributors',
-                          //     ),
-                          //   ],
-                          // ),
+                          RichAttributionWidget(
+                            attributions: const [
+                              TextSourceAttribution(
+                                '© OpenStreetMap contributors',
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),

@@ -15,6 +15,9 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+// Rate-limited public API routes (60 requests per minute)
+Route::middleware('throttle:60,1')->group(function () {
+
 Route::controller(SurahController::class)->group(function () {
     Route::get('/surahs', 'index');
     Route::get('/surahs/{id}', 'show');
@@ -31,7 +34,15 @@ Route::controller(PageController::class)->group(function () {
     Route::get('/pages/{page}', 'show');
 });
 
-Route::post('/recitation/check', [RecitationController::class, 'check']);
+});
+
+// Heavy AI endpoint — stricter rate limit (10 requests per minute)
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/recitation/check', [RecitationController::class, 'check']);
+});
+
+// Rate-limited public API routes (continued)
+Route::middleware('throttle:60,1')->group(function () {
 
 Route::controller(HadithController::class)->group(function () {
     Route::get('/hadith/editions', 'editions');
@@ -47,8 +58,4 @@ Route::controller(HijriCalendarController::class)->group(function () {
 });
 
 Route::get('/mosques/nearby', [MosqueController::class, 'nearby']);
-
-Route::get('/test-timeout', function () {
-    sleep(20); // Sleep for 20 seconds to trigger timeout (default fast timeout is 10s)
-    return response()->json(['message' => 'Request completed after delay']);
 });

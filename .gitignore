@@ -1,0 +1,9 @@
+# Environment files (all levels)
+**/.env
+**/.env.backup
+**/.env.production
+**/.env.local
+
+# OS files
+.DS_Store
+Thumbs.db

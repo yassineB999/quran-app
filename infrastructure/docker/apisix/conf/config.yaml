@@ -1,0 +1,29 @@
+deployment:
+  role: traditional
+  role_traditional:
+    config_provider: etcd
+  admin:
+    allow_admin:
+      - 172.16.0.0/12
+      - 127.0.0.0/8
+    admin_key:
+      - name: admin
+        key: quran-apisix-4dm1n-k3y-2026
+        role: admin
+    listen:
+      ip: 0.0.0.0
+      port: 9180
+  etcd:
+    host:
+      - "http://etcd:2379"
+    prefix: "/apisix"
+apisix:
+  node_listen: 9080
+  enable_ipv6: false
+  enable_admin: true
+  proxy_mode: http
+plugin_attr:
+  prometheus:
+    export_addr:
+      ip: 0.0.0.0
+      port: 9091

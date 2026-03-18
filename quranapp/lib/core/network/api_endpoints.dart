@@ -1,8 +1,12 @@
 /// Centralized API endpoints for the Laravel API.
-/// Update the baseUrl to match your API server.
+/// Configure via --dart-define at build time:
+///   flutter run --dart-define=API_BASE_URL=http://YOUR_IP:9080/api
+///   flutter run --dart-define=WS_BASE_URL=ws://YOUR_IP:8000/ws/recite
 class ApiEndpoints {
-  static const String baseUrl =
-      'http://192.168.1.9:8001/api'; // Connection timeout in milliseconds (10s for fast failure detection)
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://192.168.1.8:9080/api',
+  );
   static const int connectTimeout = 20000;
   static const int receiveTimeout = 30000;
 
@@ -33,10 +37,12 @@ class ApiEndpoints {
   static const String nearbyMosques = '/mosques/nearby';
 
   // Adhkar endpoints
-  // Adhkar endpoints
   static String adhkar(String category) => '/adhkar/$category';
 
-  // Recitation
-  static const String recitationWebSocket = 'ws://192.168.1.9:8000/ws/recite';
+  // Recitation WebSocket
+  static const String recitationWebSocket = String.fromEnvironment(
+    'WS_BASE_URL',
+    defaultValue: 'ws://192.168.1.8:8000/ws/recite', // Use PC's LAN IP for real device
+  );
   static String surahWords(int id) => '$surahs/$id/words';
 }

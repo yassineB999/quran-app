@@ -12,8 +12,6 @@ class RecitationController extends Controller
     public function check(Request $request)
     {
         Log::info('=== RECITATION CHECK REQUEST STARTED ===');
-        Log::info('Request IP: ' . $request->ip());
-        Log::info('Request Headers: ' . json_encode($request->headers->all()));
 
         $audioFile = null;
         $tempPath = null;
@@ -135,7 +133,6 @@ class RecitationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'AI Service unavailable',
-                'error' => $e->getMessage()
             ], 503);
         }
     }

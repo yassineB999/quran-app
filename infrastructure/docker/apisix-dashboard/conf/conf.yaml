@@ -1,0 +1,35 @@
+conf:
+  listen:
+    host: 0.0.0.0
+    port: 9000
+  log:
+    error_log:
+      level: warn
+      file_path: /usr/local/apisix-dashboard/logs/error.log
+    access_log:
+      file_path: /usr/local/apisix-dashboard/logs/access.log
+  max_header_bytes: 10240
+  etcd:
+    endpoints:
+      - "http://etcd:2379"
+    prefix: "/apisix"
+
+authentication:
+  secret: quran-dashboard-s3cr3t-r4nd0m-v4lu3
+  expire_time: 3600
+  users:
+    - username: admin
+      password: quran-dashboard-ch4ng3-m3!
+
+plugins:
+  - key-auth
+  - jwt-auth
+  - basic-auth
+  - limit-req
+  - limit-conn
+  - limit-count
+  - prometheus
+  - proxy-rewrite
+  - proxy-mirror
+  - proxy-cache
+  - cors
