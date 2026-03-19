@@ -436,9 +436,11 @@ class HadithController extends Controller
         if ($edition === '') {
             return $edition;
         }
-        if (str_starts_with($edition, 'ara-') ||
+        if (
+            str_starts_with($edition, 'ara-') ||
             str_starts_with($edition, 'eng-') ||
-            str_starts_with($edition, 'en-')) {
+            str_starts_with($edition, 'en-')
+        ) {
             return $edition;
         }
 

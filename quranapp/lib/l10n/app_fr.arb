@@ -134,5 +134,12 @@
   "cacheError": "Erreur de stockage local",
   "validationError": "Données invalides",
   "checkConnectionHint": "Vérifiez votre connexion Internet et réessayez",
-  "tryAgainLaterHint": "Le serveur est peut-être en maintenance. Réessayez dans quelques instants"
+  "tryAgainLaterHint": "Le serveur est peut-être en maintenance. Réessayez dans quelques instants",
+  "qiblahCalibrationTitle": "Calibrage de la boussole",
+  "qiblahCalibrationMessage": "Veuillez calibrer la boussole en déplaçant votre appareil en forme de 8 comme indiqué ci-dessous.",
+  "qiblahCalibrationDontShowAgain": "Ne plus afficher",
+  "gotIt": "Compris",
+  "ayahNumber": "Verset",
+  "cancel": "Annuler",
+  "openSettings": "Ouvrir les paramètres"
 }

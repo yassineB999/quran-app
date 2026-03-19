@@ -24,6 +24,12 @@ class AudioPlayerService {
   /// Stream of playing status
   Stream<bool> get playingStream => _player.playingStream;
 
+  /// Stream of current item index in playlist
+  Stream<int?> get currentIndexStream => _player.currentIndexStream;
+
+  /// Current item index in playlist
+  int? get currentIndex => _player.currentIndex;
+
   /// Current position
   Duration get position => _player.position;
 

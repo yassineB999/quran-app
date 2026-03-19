@@ -16,6 +16,7 @@ class ApiEndpoints {
   static String surahPages(int surahId) => '$surahs/$surahId/pages';
 
   static String quranPage(int page) => '/pages/$page';
+  static String tafseer(int surahId, int ayahId) => '/tafseer/$surahId/$ayahId';
 
   // Reciter endpoints
   static const String reciters = '/reciters';

@@ -108,3 +108,13 @@ class PositionUpdatedEvent extends AudioPlayerEvent {
 class AudioCompletedEvent extends AudioPlayerEvent {
   const AudioCompletedEvent();
 }
+
+/// Event when playlist index updates
+class CurrentIndexUpdatedEvent extends AudioPlayerEvent {
+  final int? index;
+
+  const CurrentIndexUpdatedEvent(this.index);
+
+  @override
+  List<Object?> get props => [index];
+}

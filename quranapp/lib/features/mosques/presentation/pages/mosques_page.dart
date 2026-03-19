@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:quranapp/config/theme/app_theme.dart';
@@ -32,16 +33,40 @@ class _MosquesView extends StatefulWidget {
   State<_MosquesView> createState() => _MosquesViewState();
 }
 
-class _MosquesViewState extends State<_MosquesView> {
+class _MosquesViewState extends State<_MosquesView> with WidgetsBindingObserver {
   late final MapController _mapController;
   Mosque? _selectedMosque;
   List<LatLng> _routePoints = [];
   bool _routeLoading = false;
+  bool _isDialogShowing = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _mapController = MapController();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      Geolocator.checkPermission().then((permission) {
+        if (mounted) {
+          if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+            final mosqueBloc = context.read<MosqueBloc>();
+            if (mosqueBloc.state is MosquePermissionDenied) {
+              mosqueBloc.add(const LoadMosquesEvent());
+            }
+          }
+        }
+      });
+    }
   }
 
   @override
@@ -54,6 +79,9 @@ class _MosquesViewState extends State<_MosquesView> {
       appBar: AppBar(title: Text(l10n.tr('mosquesLabel'))),
       body: BlocConsumer<MosqueBloc, MosqueState>(
         listener: (context, state) {
+          if (state is MosquePermissionDenied) {
+            _showPermissionDialog(context);
+          }
           if (state is MosqueLoaded && state.errorMessage != null) {
             ScaffoldMessenger.of(
               context,
@@ -267,6 +295,65 @@ class _MosquesViewState extends State<_MosquesView> {
         },
       ),
     );
+  }
+
+  void _showPermissionDialog(BuildContext context) {
+    if (_isDialogShowing || !mounted) return;
+    _isDialogShowing = true;
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      useRootNavigator: true,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.location_disabled_rounded, color: Colors.orange, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.tr('allowLocationAccess'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          l10n.tr('locationPermissionRequired'),
+          style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx, rootNavigator: true).pop();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.grey,
+            ),
+            child: Text(l10n.tr('cancel'), style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(ctx, rootNavigator: true).pop();
+              Geolocator.openAppSettings();
+            },
+            icon: const Icon(Icons.settings_rounded, size: 18),
+            label: Text(l10n.tr('openSettings'), style: const TextStyle(fontWeight: FontWeight.w600)),
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ],
+      ),
+    ).then((_) {
+      if (mounted) {
+        _isDialogShowing = false;
+      }
+    });
   }
 
   Future<void> _onMosqueTap(Mosque mosque, MosqueLoaded state) async {

@@ -190,11 +190,11 @@ class _QuranPageView extends StatefulWidget {
 class _QuranPageViewState extends State<_QuranPageView> {
   late PageController _pageController;
 
-  final Map<int, Verse> _selectedVerses = {};
-  bool _showActionBar = false;
+  Verse? _selectedVerse;
+  bool _showPlayer = false;
   bool _hasRestoredProgress = false;
 
-  static const double _actionBarHeight = 88.0;
+  static const double _playerHeight = 130.0;
 
   @override
   void initState() {
@@ -230,19 +230,22 @@ class _QuranPageViewState extends State<_QuranPageView> {
 
   void _toggleVerseSelection(Verse verse) {
     setState(() {
-      if (_selectedVerses.containsKey(verse.number)) {
-        _selectedVerses.remove(verse.number);
+      if (_selectedVerse?.number == verse.number) {
+        _selectedVerse = null;
+        _showPlayer = false;
       } else {
-        _selectedVerses[verse.number] = verse;
+        _selectedVerse = verse;
+        _showPlayer = true;
       }
-      _showActionBar = _selectedVerses.isNotEmpty;
     });
+    // Stop previous audio when changing selection
+    context.read<AudioPlayerBloc>().add(const StopEvent());
   }
 
   void _clearSelection({bool stopAudio = false}) {
     setState(() {
-      _showActionBar = false;
-      _selectedVerses.clear();
+      _showPlayer = false;
+      _selectedVerse = null;
     });
     if (stopAudio) {
       context.read<AudioPlayerBloc>().add(const StopEvent());
@@ -250,49 +253,25 @@ class _QuranPageViewState extends State<_QuranPageView> {
   }
 
   List<String> _getSelectedVerseUrls() {
-    final sortedVerses = _selectedVerses.values.toList()
-      ..sort((a, b) => a.number.compareTo(b.number));
-
-    return sortedVerses
-        .map(
-          (v) =>
-              'https://cdn.islamic.network/quran/audio/128/ar.alafasy/${v.number}.mp3',
-        )
-        .toList(growable: false);
+    if (_selectedVerse == null) return [];
+    return [
+      'https://cdn.islamic.network/quran/audio/128/ar.alafasy/${_selectedVerse!.number}.mp3'
+    ];
   }
 
   void _playSelectedVerses() {
-    if (_selectedVerses.isEmpty) return;
+    if (_selectedVerse == null) return;
 
     final urls = _getSelectedVerseUrls();
 
     if (urls.isNotEmpty) {
-      final l10n = AppLocalizations.of(context);
       context.read<AudioPlayerBloc>().add(PlayPlaylistEvent(urls));
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.tr(
-              'playingVerses',
-              params: {'count': '${_selectedVerses.length}'},
-            ),
-          ),
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.fromLTRB(
-            16,
-            0,
-            16,
-            MediaQuery.of(context).viewPadding.bottom +
-                (_showActionBar ? _actionBarHeight + 16 : 16),
-          ),
-        ),
-      );
     }
   }
 
   void _togglePlayPause(AudioPlayerState audioState) {
-    if (_selectedVerses.isEmpty) return;
+    if (_selectedVerse == null) return;
     if (audioState is AudioPlayerPlaying) {
       context.read<AudioPlayerBloc>().add(const PauseEvent());
       return;
@@ -341,8 +320,8 @@ class _QuranPageViewState extends State<_QuranPageView> {
                 builder: (context, state) {
                   return Padding(
                     padding: EdgeInsets.only(
-                      bottom: _showActionBar
-                          ? bottomInset + _actionBarHeight + 12
+                      bottom: _showPlayer
+                          ? bottomInset + _playerHeight + 12
                           : bottomInset + 12,
                     ),
                     child: PageView.builder(
@@ -359,7 +338,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
                           SaveReadingStateEvent(mode: 'page', page: pageNumber),
                         );
 
-                        if (_showActionBar) {
+                        if (_showPlayer) {
                           _clearSelection(stopAudio: true);
                         }
                       },
@@ -392,7 +371,7 @@ class _QuranPageViewState extends State<_QuranPageView> {
                           verses: verses,
                           pageNumber: pageNumber,
                           isDark: isDark,
-                          selectedVerseNumbers: _selectedVerses.keys.toSet(),
+                          selectedVerseNumber: _selectedVerse?.number,
                           onVerseTap: _toggleVerseSelection,
                         );
                       },
@@ -402,17 +381,17 @@ class _QuranPageViewState extends State<_QuranPageView> {
               ),
             ),
 
-            // ── Audio action bar ──
+            // ── Audio player ──
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
-              bottom: _showActionBar
+              bottom: _showPlayer
                   ? bottomInset + 12
-                  : -(bottomInset + _actionBarHeight + 28),
+                  : -(bottomInset + _playerHeight + 28),
               left: 20,
               right: 20,
-              child: _AudioActionBar(
-                selectedCount: _selectedVerses.length,
-                showActionBar: _showActionBar,
+              child: _FloatingAudioPlayer(
+                selectedVerse: _selectedVerse,
+                showPlayer: _showPlayer,
                 isDark: isDark,
                 onPlayPause: _togglePlayPause,
                 onClear: () => _clearSelection(stopAudio: true),
@@ -432,14 +411,14 @@ class _MushafPage extends StatefulWidget {
   final List<Verse> verses;
   final int pageNumber;
   final bool isDark;
-  final Set<int> selectedVerseNumbers;
+  final int? selectedVerseNumber;
   final Function(Verse) onVerseTap;
 
   const _MushafPage({
     required this.verses,
     required this.pageNumber,
     required this.isDark,
-    required this.selectedVerseNumbers,
+    required this.selectedVerseNumber,
     required this.onVerseTap,
   });
 
@@ -556,7 +535,7 @@ class _MushafPageState extends State<_MushafPage> {
     final spans = <InlineSpan>[];
 
     for (final verse in verses) {
-      final isSelected = widget.selectedVerseNumbers.contains(verse.number);
+      final isSelected = widget.selectedVerseNumber == verse.number;
       final recognizer = _recognizers.putIfAbsent(
         verse.number,
         () => TapGestureRecognizer()..onTap = () => widget.onVerseTap(verse),
@@ -572,7 +551,7 @@ class _MushafPageState extends State<_MushafPage> {
             height: 2.1,
             color: isSelected ? AppTheme.primaryTeal : textColor,
             backgroundColor: isSelected
-                ? AppTheme.primaryTeal.withValues(alpha: 0.1)
+                ? (isDark ? AppTheme.primaryTeal.withValues(alpha: 0.15) : AppTheme.primaryTeal.withValues(alpha: 0.1))
                 : null,
           ),
           recognizer: recognizer,
@@ -585,10 +564,20 @@ class _MushafPageState extends State<_MushafPage> {
           alignment: PlaceholderAlignment.middle,
           child: GestureDetector(
             onTap: () => widget.onVerseTap(verse),
-            child: _AyahMarkerWidget(
-              number: verse.numberInSurah,
-              isSelected: isSelected,
-              isDark: isDark,
+            child: TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutBack,
+              tween: Tween(begin: 1.0, end: isSelected ? 1.15 : 1.0),
+              builder: (context, scale, child) {
+                return Transform.scale(
+                  scale: scale,
+                  child: _AyahMarkerWidget(
+                    number: verse.numberInSurah,
+                    isSelected: isSelected,
+                    isDark: isDark,
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -794,18 +783,18 @@ class _AyahMarkerWidget extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// AUDIO ACTION BAR
+// FLOATING AUDIO PLAYER
 // ═══════════════════════════════════════════════════════════════════════════════
-class _AudioActionBar extends StatelessWidget {
-  final int selectedCount;
-  final bool showActionBar;
+class _FloatingAudioPlayer extends StatelessWidget {
+  final Verse? selectedVerse;
+  final bool showPlayer;
   final bool isDark;
   final void Function(AudioPlayerState) onPlayPause;
   final VoidCallback onClear;
 
-  const _AudioActionBar({
-    required this.selectedCount,
-    required this.showActionBar,
+  const _FloatingAudioPlayer({
+    required this.selectedVerse,
+    required this.showPlayer,
     required this.isDark,
     required this.onPlayPause,
     required this.onClear,
@@ -822,104 +811,117 @@ class _AudioActionBar extends StatelessWidget {
           previous.position != current.position,
       builder: (context, audioState) {
         final isPlaying = audioState is AudioPlayerPlaying;
+        final position = audioState.position;
+        final duration = audioState.duration;
+        
+        final progress = duration.inMilliseconds > 0 
+           ? position.inMilliseconds / duration.inMilliseconds 
+           : 0.0;
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: AppTheme.primaryTeal.withValues(alpha: 0.15),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
+              // Info and close
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryTeal.withValues(
-                        alpha: isDark ? 0.2 : 0.12,
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '$selectedCount',
-                      style: TextStyle(
-                        color: AppTheme.primaryTeal,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.tr('selectedVerses'),
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      Text(
-                        l10n.tr('tapToPlay'),
-                        style: TextStyle(
-                          color: textColor.withValues(alpha: 0.6),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
+                   Row(
+                     children: [
+                       Container(
+                         padding: const EdgeInsets.all(8),
+                         decoration: BoxDecoration(
+                           color: AppTheme.primaryTeal.withValues(alpha: 0.15),
+                           shape: BoxShape.circle,
+                         ),
+                         child: Icon(Icons.audiotrack_rounded, color: AppTheme.primaryTeal, size: 20),
+                       ),
+                       const SizedBox(width: 12),
+                       Column(
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: [
+                           Text(
+                             selectedVerse != null ? '${l10n.tr('ayahNumber')} ${selectedVerse!.numberInSurah}' : l10n.tr('selectedVerses'),
+                             style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
+                           ),
+                           Text(
+                             l10n.tr('tapToPlay'),
+                             style: TextStyle(color: textColor.withValues(alpha: 0.6), fontSize: 11),
+                           ),
+                         ],
+                       ),
+                     ],
+                   ),
+                   IconButton(
+                     onPressed: onClear,
+                     icon: const Icon(Icons.close_rounded, size: 20),
+                     color: Colors.grey,
+                     padding: EdgeInsets.zero,
+                     constraints: const BoxConstraints(),
+                     tooltip: l10n.tr('closeTooltip'),
+                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              // Progress and Controls
               Row(
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryTeal,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryTeal.withValues(alpha: 0.35),
-                          blurRadius: 12,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      onPressed: () => onPlayPause(audioState),
-                      icon: Icon(
-                        isPlaying
-                            ? Icons.pause_rounded
-                            : Icons.play_arrow_rounded,
+                  // Replay Button
+                  IconButton(
+                    onPressed: () {
+                      context.read<AudioPlayerBloc>().add(const SeekEvent(Duration.zero));
+                      if (!isPlaying) onPlayPause(audioState);
+                    },
+                    icon: const Icon(Icons.replay_rounded),
+                    color: AppTheme.primaryTeal,
+                  ),
+                  const SizedBox(width: 4),
+                  // Play/Pause Button
+                  GestureDetector(
+                    onTap: () => onPlayPause(audioState),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryTeal,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                           BoxShadow(color: AppTheme.primaryTeal.withValues(alpha: 0.3), blurRadius: 8),
+                        ],
                       ),
-                      color: Colors.white,
-                      tooltip: isPlaying
-                          ? l10n.tr('tapToStop')
-                          : l10n.tr('playSelectionTooltip'),
+                      child: Icon(
+                        isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: onClear,
-                    icon: Icon(
-                      isPlaying ? Icons.stop_rounded : Icons.close_rounded,
+                  const SizedBox(width: 16),
+                  // Progress Bar
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        backgroundColor: AppTheme.primaryTeal.withValues(alpha: 0.15),
+                        valueColor: const AlwaysStoppedAnimation(AppTheme.primaryTeal),
+                        minHeight: 6,
+                      ),
                     ),
-                    color: Colors.grey,
-                    tooltip: l10n.tr('closeTooltip'),
                   ),
                 ],
               ),

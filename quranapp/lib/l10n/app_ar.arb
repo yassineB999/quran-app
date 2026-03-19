@@ -149,5 +149,12 @@
   "cacheError": "خطأ في التخزين المحلي",
   "validationError": "بيانات غير صالحة",
   "checkConnectionHint": "تحقق من اتصالك بالإنترنت وحاول مرة أخرى",
-  "tryAgainLaterHint": "قد يكون الخادم تحت الصيانة. يرجى المحاولة مرة أخرى بعد قليل"
+  "tryAgainLaterHint": "قد يكون الخادم تحت الصيانة. يرجى المحاولة مرة أخرى بعد قليل",
+  "qiblahCalibrationTitle": "معايرة البوصلة",
+  "qiblahCalibrationMessage": "يرجى معايرة البوصلة بتحريك جهازك على شكل رقم 8 كما هو موضح أدناه.",
+  "qiblahCalibrationDontShowAgain": "لا تظهر مرة أخرى",
+  "gotIt": "فهمت",
+  "ayahNumber": "الآية",
+  "cancel": "إلغاء",
+  "openSettings": "فتح الإعدادات"
 }

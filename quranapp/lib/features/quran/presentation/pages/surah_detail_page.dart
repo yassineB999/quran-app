@@ -112,13 +112,6 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
           },
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.more_vert_rounded,
-              color: theme.appBarTheme.iconTheme?.color,
-            ),
-            onPressed: () {},
-          ),
           const SizedBox(width: 8),
         ],
         bottom: PreferredSize(

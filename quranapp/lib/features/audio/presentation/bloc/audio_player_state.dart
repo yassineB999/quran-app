@@ -13,6 +13,7 @@ abstract class AudioPlayerState extends Equatable {
   final bool isRepeating;
   final Failure? failure;
   final String status;
+  final int? currentIndex;
 
   const AudioPlayerState({
     this.surahId = 1,
@@ -24,6 +25,7 @@ abstract class AudioPlayerState extends Equatable {
     this.isRepeating = false,
     this.failure,
     this.status = 'initial',
+    this.currentIndex,
   });
 
   @override
@@ -37,6 +39,7 @@ abstract class AudioPlayerState extends Equatable {
     isRepeating,
     failure,
     status,
+    currentIndex,
   ];
 }
 
@@ -64,6 +67,7 @@ class AudioPlayerPlaying extends AudioPlayerState {
     required super.duration,
     required super.speed,
     required super.isRepeating,
+    super.currentIndex,
   }) : super(status: 'playing');
 
   AudioPlayerPlaying copyWith({
@@ -74,6 +78,7 @@ class AudioPlayerPlaying extends AudioPlayerState {
     Duration? duration,
     double? speed,
     bool? isRepeating,
+    int? currentIndex,
   }) {
     return AudioPlayerPlaying(
       surahId: surahId ?? this.surahId,
@@ -83,6 +88,7 @@ class AudioPlayerPlaying extends AudioPlayerState {
       duration: duration ?? this.duration,
       speed: speed ?? this.speed,
       isRepeating: isRepeating ?? this.isRepeating,
+      currentIndex: currentIndex ?? this.currentIndex,
     );
   }
 }
@@ -97,6 +103,7 @@ class AudioPlayerPaused extends AudioPlayerState {
     required super.duration,
     required super.speed,
     required super.isRepeating,
+    super.currentIndex,
   }) : super(status: 'paused');
 
   AudioPlayerPaused copyWith({
@@ -107,6 +114,7 @@ class AudioPlayerPaused extends AudioPlayerState {
     Duration? duration,
     double? speed,
     bool? isRepeating,
+    int? currentIndex,
   }) {
     return AudioPlayerPaused(
       surahId: surahId ?? this.surahId,
@@ -116,6 +124,7 @@ class AudioPlayerPaused extends AudioPlayerState {
       duration: duration ?? this.duration,
       speed: speed ?? this.speed,
       isRepeating: isRepeating ?? this.isRepeating,
+      currentIndex: currentIndex ?? this.currentIndex,
     );
   }
 }

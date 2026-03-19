@@ -34,6 +34,8 @@ Route::controller(PageController::class)->group(function () {
     Route::get('/pages/{page}', 'show');
 });
 
+Route::get('/tafseer/{surah}/{ayah}', [App\Http\Controllers\Api\TafsirController::class, 'show']);
+
 });
 
 // Heavy AI endpoint — stricter rate limit (10 requests per minute)

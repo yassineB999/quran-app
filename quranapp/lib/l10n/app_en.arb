@@ -146,5 +146,12 @@
   "cacheError": "Local storage error",
   "validationError": "Invalid data",
   "checkConnectionHint": "Check your internet connection and try again",
-  "tryAgainLaterHint": "The server may be under maintenance. Please try again in a few moments"
+  "tryAgainLaterHint": "The server may be under maintenance. Please try again in a few moments",
+  "qiblahCalibrationTitle": "Compass Calibration",
+  "qiblahCalibrationMessage": "Please calibrate the compass by moving your device in an 8-figure motion as shown below.",
+  "qiblahCalibrationDontShowAgain": "Don't show again",
+  "gotIt": "Got it",
+  "ayahNumber": "Ayah",
+  "cancel": "Cancel",
+  "openSettings": "Open Settings"
 }

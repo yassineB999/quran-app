@@ -18,6 +18,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
   StreamSubscription<PlayerState>? _playerStateSubscription;
+  StreamSubscription<int?>? _currentIndexSubscription;
 
   List<Reciter> _reciters = [];
   Reciter? _currentReciter;
@@ -44,6 +45,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     on<PositionUpdatedEvent>(_onPositionUpdated);
     on<AudioCompletedEvent>(_onAudioCompleted);
     on<PlayPlaylistEvent>(_onPlayPlaylist);
+    on<CurrentIndexUpdatedEvent>(_onCurrentIndexUpdated);
 
     _setupStreams();
   }
@@ -69,6 +71,10 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
         add(const AudioCompletedEvent());
       }
     });
+
+    _currentIndexSubscription = audioService.currentIndexStream.listen((index) {
+      add(CurrentIndexUpdatedEvent(index));
+    });
   }
 
   void _onAudioCompleted(
@@ -86,6 +92,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
           duration: s.duration,
           speed: s.speed,
           isRepeating: s.isRepeating,
+          currentIndex: s.currentIndex,
         ),
       );
     }
@@ -172,6 +179,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
                 duration: _duration,
                 speed: audioService.speed,
                 isRepeating: audioService.loopMode != LoopMode.off,
+                currentIndex: audioService.currentIndex,
               ),
             );
           } else {
@@ -184,6 +192,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
                 duration: _duration,
                 speed: audioService.speed,
                 isRepeating: audioService.loopMode != LoopMode.off,
+                currentIndex: audioService.currentIndex,
               ),
             );
           }
@@ -227,6 +236,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
         duration: duration,
         speed: speed,
         isRepeating: isRepeating,
+        currentIndex: audioService.currentIndex,
       ),
     );
     await audioService.play();
@@ -248,6 +258,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
           duration: s.duration,
           speed: s.speed,
           isRepeating: s.isRepeating,
+          currentIndex: s.currentIndex,
         ),
       );
     }
@@ -266,6 +277,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
           duration: _duration,
           speed: audioService.speed,
           isRepeating: audioService.loopMode != LoopMode.off,
+          currentIndex: audioService.currentIndex,
         ),
       );
     }
@@ -296,6 +308,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
           duration: Duration.zero,
           speed: audioService.speed,
           isRepeating: audioService.loopMode != LoopMode.off,
+          currentIndex: audioService.currentIndex,
         ),
       );
     } catch (e) {
@@ -391,11 +404,24 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     }
   }
 
+  void _onCurrentIndexUpdated(
+    CurrentIndexUpdatedEvent event,
+    Emitter<AudioPlayerState> emit,
+  ) {
+    if (state is AudioPlayerPlaying) {
+      emit((state as AudioPlayerPlaying).copyWith(currentIndex: event.index));
+    } else if (state is AudioPlayerPaused) {
+      emit((state as AudioPlayerPaused).copyWith(currentIndex: event.index));
+    }
+  }
+
   @override
-  Future<void> close() {
-    _positionSubscription?.cancel();
-    _durationSubscription?.cancel();
-    _playerStateSubscription?.cancel();
+  Future<void> close() async {
+    await audioService.stop();
+    await _positionSubscription?.cancel();
+    await _durationSubscription?.cancel();
+    await _playerStateSubscription?.cancel();
+    await _currentIndexSubscription?.cancel();
     return super.close();
   }
 }

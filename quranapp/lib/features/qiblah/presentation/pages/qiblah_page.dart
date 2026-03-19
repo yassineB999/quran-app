@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quranapp/config/theme/app_theme.dart';
 import 'package:quranapp/core/di/injection_container.dart';
 import 'package:quranapp/features/qiblah/presentation/bloc/qiblah_bloc.dart';
 import 'package:quranapp/features/qiblah/presentation/bloc/qiblah_state.dart';
 import 'package:quranapp/features/qiblah/presentation/widgets/compass_widget.dart';
+import 'package:quranapp/features/qiblah/presentation/widgets/qiblah_calibration_dialog.dart';
 import 'package:quranapp/core/widgets/error_state_widget.dart';
 import 'package:quranapp/l10n/app_localizations.dart';
 
@@ -20,8 +22,33 @@ class QiblahPage extends StatelessWidget {
   }
 }
 
-class _QiblahView extends StatelessWidget {
+class _QiblahView extends StatefulWidget {
   const _QiblahView();
+
+  @override
+  State<_QiblahView> createState() => _QiblahViewState();
+}
+
+class _QiblahViewState extends State<_QiblahView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkCalibrationDialog();
+    });
+  }
+
+  Future<void> _checkCalibrationDialog() async {
+    final prefs = await SharedPreferences.getInstance();
+    final dontShow = prefs.getBool('hide_qiblah_calibration') ?? false;
+    
+    if (!dontShow && mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => const QiblahCalibrationDialog(),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
