@@ -399,15 +399,15 @@ def _register_routes(app: FastAPI):
         recitation_session = None
         session_id = None
         
-        # Fresh chunk parameters
-        chunk_duration = 3.0  # Transcribe every 3 seconds of NEW audio (shorter = faster feedback)
+        # Fresh chunk parameters — 6s chunks give Whisper much more context
+        # than the previous 3s, dramatically reducing fragmented/hallucinated output
+        chunk_duration = 6.0
         bytes_per_second = 16000 * 2  # 16kHz * 16-bit = 32000 bytes/sec
         CHUNK_SIZE = int(bytes_per_second * chunk_duration)
         SILENCE_ENERGY_THRESHOLD = 0.01  # RMS energy below this = too quiet for reliable transcription
         
         buffer = bytearray()
         session_text = ""
-        last_transcription = ""
         is_processing = False  # Prevent overlapping transcriptions
         surah_completed = False  # Stop processing when surah is done
         
@@ -428,8 +428,13 @@ def _register_routes(app: FastAPI):
                         await websocket.close()
                         return
                     
-                    # Create recitation session
-                    recitation_session = session_manager.create_session(surah_id)
+                    # Extract optional word data from client (Warsh text consistency)
+                    client_words = init_msg.get('words')
+
+                    # Create recitation session with client-provided words
+                    recitation_session = session_manager.create_session(
+                        surah_id, client_words=client_words
+                    )
                     session_id = recitation_session.session_id
                     
                     # Send session ready confirmation
@@ -482,11 +487,12 @@ def _register_routes(app: FastAPI):
                         audio_int16 = np.frombuffer(chunk_bytes, dtype=np.int16)
                         audio_float32 = audio_int16.astype(np.float32) / 32768.0
                         
-                        # Define overlap samples (0.5s * 16000Hz)
-                        OVERLAP_SAMPLES = int(16000 * 0.5)
+                        # Define overlap samples (2.0s * 16000Hz) — increased from
+                        # 0.5s to give Whisper better cross-chunk context
+                        OVERLAP_SAMPLES = int(16000 * 2.0)
                         
                         # Check audio energy on NEW data only (ignore the overlap part)
-                        # buffer = [Old Overlap (0.5s)] + [New Audio (2.5s)]
+                        # buffer = [Old Overlap (2.0s)] + [New Audio (4.0s)]
                         # We want to check if the NEW audio is silent.
                         if len(audio_float32) > OVERLAP_SAMPLES:
                             new_audio = audio_float32[OVERLAP_SAMPLES:]
@@ -525,8 +531,8 @@ def _register_routes(app: FastAPI):
                             )
                         
                         # Audio Overlap Management
-                        # Keep the last 0.5s of audio in the buffer for the next chunk
-                        OVERLAP_DURATION = 0.5
+                        # Keep the last 2.0s of audio in the buffer for the next chunk
+                        OVERLAP_DURATION = 2.0
                         OVERLAP_SIZE = int(bytes_per_second * OVERLAP_DURATION)
                         buffer = bytearray(buffer[-OVERLAP_SIZE:])
                         
@@ -572,32 +578,12 @@ def _register_routes(app: FastAPI):
                             current_text = ' '.join(filtered_words)
                         
                         if current_text:
-                            # Merge text with overlap handling
-                            if session_text and last_transcription:
-                                # Merge (last_chunk + new_chunk) dealing with overlap
-                                merged_segment = transcription_service.remove_overlap_with_sequencematcher(
-                                    last_transcription, current_text
-                                )
-                                
-                                # Update session_text: remove the raw last_transcription and add merged version
-                                base_text = session_text
-                                if base_text.endswith(last_transcription):
-                                    base_text = base_text[:-len(last_transcription)].strip()
-                                
-                                if base_text:
-                                    session_text = base_text + ' ' + merged_segment
-                                else:
-                                    session_text = merged_segment
-                                
-                                logger.info(f"Session {session_id}: Merged '{last_transcription}' + '{current_text}' -> '{merged_segment}'")
-                            else:
-                                if session_text:
-                                    session_text = session_text + ' ' + current_text
-                                else:
-                                    session_text = current_text
-                            
-                            # Update last_transcription for next iteration
-                            last_transcription = current_text
+                            # Deduplicate overlap at chunk boundary using word-level
+                            # fuzzy matching. Replaces the fragile SequenceMatcher
+                            # merge that could produce nonsense text on match failure.
+                            session_text = recitation_session.deduplicate_overlap(
+                                session_text, current_text
+                            )
                             
                             logger.info(
                                 f"Session {session_id}: Accumulated "

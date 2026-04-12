@@ -16,13 +16,19 @@ class WebSocketDataSource {
     return _responseController!.stream;
   }
 
-  Future<void> connect({int? surahId}) async {
+  Future<void> connect({int? surahId, List<Map<String, dynamic>>? words}) async {
     try {
       _channel = WebSocketChannel.connect(Uri.parse(_url));
 
       // Send session initialization if surahId is provided
       if (surahId != null) {
-        _channel!.sink.add(jsonEncode({'type': 'init', 'surah_id': surahId}));
+        final initMsg = <String, dynamic>{'type': 'init', 'surah_id': surahId};
+        // Include word data so the AI service uses the same Warsh text
+        // source as the Flutter UI, preventing text source mismatch
+        if (words != null && words.isNotEmpty) {
+          initMsg['words'] = words;
+        }
+        _channel!.sink.add(jsonEncode(initMsg));
       }
 
       _channel!.stream.listen(

@@ -20,9 +20,12 @@ class TranscriptionService:
     Service for transcribing Quran recitations using the Whisper model.
     """
     
-    MODEL_NAME = "tarteel-ai/whisper-base-ar-quran"
-    BASE_MODEL_NAME = "openai/whisper-base"
-    
+    # Whisper-medium fine-tuned on 252K Quran audio samples (5.8% WER).
+    # Replaces whisper-base (74M params) which had terrible real-world accuracy.
+    # First run will download ~3GB. Inference is ~3-5x slower than base on CPU.
+    MODEL_NAME = "Habib-HF/tarbiyah-ai-whisper-medium-merged"
+    BASE_MODEL_NAME = "openai/whisper-medium"
+
     # Whisper's hard limit is 30 seconds
     # Use 29.5 seconds to be safe and allow for overlap
     MAX_AUDIO_LENGTH_SECONDS = 29.5
@@ -59,11 +62,19 @@ class TranscriptionService:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
             logger.info(f"Using device: {self.device}")
             
-            # Load processor and model
+            # Load processor and model.
+            # The fine-tuned model's generation config is outdated (missing
+            # lang_to_id, no_timestamps_token_id, etc.) so we apply the base
+            # model's generation config for structural metadata. This is safe
+            # because fine-tuning only changed model weights, not token IDs.
             self.processor = WhisperProcessor.from_pretrained(self.MODEL_NAME)
             self.model = WhisperForConditionalGeneration.from_pretrained(self.MODEL_NAME)
-            generation_config = GenerationConfig.from_pretrained(self.BASE_MODEL_NAME)
-            self.model.generation_config = generation_config
+            self.model.generation_config = GenerationConfig.from_pretrained(self.BASE_MODEL_NAME)
+
+            # Use float16 on GPU to halve memory usage (~750MB vs ~1.5GB).
+            # Critical for your MX250 (4GB VRAM). CPU stays float32.
+            if self.device == "cuda":
+                self.model = self.model.half()
             self.model.to(self.device)
             
             logger.info("Model loaded successfully")
@@ -99,32 +110,40 @@ class TranscriptionService:
         Returns:
             Transcription result dictionary with 'text' key
         """
-        # Use processor to convert audio to input features (mel spectrograms)
-        # The processor expects audio at 16kHz sample rate
-        input_features = self.processor(
-            audio_array, 
-            sampling_rate=self.SAMPLE_RATE, 
-            return_tensors="pt"
-        ).input_features
-        
-        # Move to device
-        input_features = input_features.to(self.device)
-        
-        # Generate transcription — force Arabic to skip language detection
-        # This significantly improves accuracy for Quranic Arabic
+        # Process audio to mel spectrograms with attention mask.
+        # The attention mask prevents hallucinations on zero-padded silence
+        # regions (Whisper pads all audio to 30s internally).
+        inputs = self.processor(
+            audio_array,
+            sampling_rate=self.SAMPLE_RATE,
+            return_tensors="pt",
+            return_attention_mask=True
+        )
+        input_features = inputs.input_features.to(self.device)
+        attention_mask = inputs.attention_mask.to(self.device)
+
+        # Match input dtype to model (float16 on GPU, float32 on CPU)
+        if self.device == "cuda":
+            input_features = input_features.half()
+
+        # Force Arabic language and transcription task via forced_decoder_ids.
+        # We use this instead of language/task params because the fine-tuned
+        # model's config predates the lang_to_id mapping required by the new API.
         forced_decoder_ids = self.processor.get_decoder_prompt_ids(
             language='ar', task='transcribe'
         )
-        
-        # Build generation kwargs
+
         generate_kwargs = {
             'forced_decoder_ids': forced_decoder_ids,
-            'return_timestamps': True,
+            'attention_mask': attention_mask,
+            # Cap generation length to prevent hallucination loops.
+            # A 6s chunk of Quran recitation is ~10-15 words (~50-80 tokens).
+            # 128 tokens is generous headroom; without this, hallucinations
+            # can generate 400+ tokens and take 25+ seconds.
+            'max_new_tokens': 128,
         }
-        
-        # Add prompt conditioning if previous text is available
-        # This passes the previous transcription as decoder context,
-        # so Whisper knows what was said before this chunk
+
+        # Add prompt conditioning with reference Quran text
         if prompt_text and prompt_text.strip():
             try:
                 prompt_ids = self.processor.get_prompt_ids(
@@ -134,7 +153,7 @@ class TranscriptionService:
                 logger.info(f"Using prompt conditioning: ...{prompt_text.strip()[-50:]}")
             except Exception as e:
                 logger.warning(f"Failed to create prompt_ids, proceeding without: {e}")
-        
+
         predicted_ids = self.model.generate(
             input_features,
             **generate_kwargs

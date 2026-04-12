@@ -92,8 +92,22 @@ class RecitationBloc extends Bloc<RecitationEvent, RecitationState> {
       // If we failed to load surah, stop here
       if (state.status == RecitationStatus.error) return;
 
-      // 2. Connect to WebSocket with surah ID
-      await webSocketDataSource.connect(surahId: event.surahId);
+      // 2. Connect to WebSocket with surah ID and word data.
+      // Sending words ensures the AI service uses the same Warsh text
+      // source as the UI, preventing the text source mismatch problem.
+      final wordsForWs = state.words
+          .map(
+            (w) => <String, dynamic>{
+              'ayah': w.ayah,
+              'word_index': w.wordIndex,
+              'text': w.expected,
+            },
+          )
+          .toList();
+      await webSocketDataSource.connect(
+        surahId: event.surahId,
+        words: wordsForWs,
+      );
 
       // Listen to WebSocket messages
       _wsSubscription = webSocketDataSource.responseStream.listen(
